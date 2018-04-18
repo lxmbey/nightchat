@@ -1,0 +1,57 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.1.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+
+mainClassName = 'com.nightchat.AppRun'
+
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	//spring相关
+	compile('org.springframework.boot:spring-boot-starter-web:2.0.1.RELEASE')
+    // compile group: 'org.springframework', name: 'spring-webmvc', version: '5.0.5.RELEASE'
+    compile group: 'org.springframework', name: 'spring-orm', version: '5.0.5.RELEASE'
+    compile group: 'org.springframework', name: 'spring-aspects', version: '5.0.5.RELEASE'
+
+    //hibernate jpa相关
+    compile 'org.slf4j:slf4j-api:1.7.14',
+	'org.hibernate:hibernate-core:5.2.16.Final',
+	'org.hibernate:hibernate-c3p0:5.2.16.Final',
+	'org.hibernate:hibernate-entitymanager:5.2.16.Final',
+	'org.hibernate:hibernate-ehcache:5.2.16.Final',
+	'mysql:mysql-connector-java:5.1.39',
+	'com.mchange:mchange-commons-java:0.2.11','org.apache.commons:commons-lang3:3.4'
+	
+	compile 'io.netty:netty-all:4.0.36.Final','com.google.code.gson:gson:2.6.2','com.google.protobuf:protobuf-java:3.3.0'
+	
+	compile 'com.alibaba:fastjson:1.2.28','redis.clients:jedis:2.9.0','io.springfox:springfox-swagger2:2.6.1',
+            'io.springfox:springfox-swagger-ui:2.6.1'
+            
+    // log4j2
+    compile 'org.apache.logging.log4j:log4j-api:2.10.0','org.apache.logging.log4j:log4j-core:2.10.0','org.apache.logging.log4j:log4j-slf4j-impl:2.10.0'
+		
+	//testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+configurations {
+  all*.exclude module: 'logback-classic'
+  all*.exclude module: 'log4j-to-slf4j'
+}
