@@ -3,8 +3,8 @@ buildscript {
 		springBootVersion = '2.0.1.RELEASE'
 	}
 	repositories {
-		mavenCentral()
-	}
+        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+    }
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 	}
@@ -14,6 +14,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
+apply plugin: 'io.spring.dependency-management'
 
 mainClassName = 'com.nightchat.AppRun'
 
@@ -21,13 +22,13 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
-	mavenCentral()
+    maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
 }
 
 dependencies {
 	//spring相关
 	compile('org.springframework.boot:spring-boot-starter-web:2.0.1.RELEASE')
-    // compile group: 'org.springframework', name: 'spring-webmvc', version: '5.0.5.RELEASE'
+	// compile("org.springframework.boot:spring-boot-starter-thymeleaf")
     compile group: 'org.springframework', name: 'spring-orm', version: '5.0.5.RELEASE'
     compile group: 'org.springframework', name: 'spring-aspects', version: '5.0.5.RELEASE'
 
