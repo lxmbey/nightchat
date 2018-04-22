@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.nightchat.net.Request;
 import com.nightchat.service.UserService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Controller("user")
 @RequestMapping("user")
@@ -27,8 +27,7 @@ public class UserController {
 	@ApiOperation("登录接口")
 	@RequestMapping(name = "login", method = RequestMethod.POST)
 	@ResponseBody
-	public String login(Request req) {
-		log.info(req.packet.data);
+	public String login(@ApiParam(name = "手机号") String phoneNum, @ApiParam(name = "密码") String password) {
 		userService.get(1);
 		return "success";
 	}

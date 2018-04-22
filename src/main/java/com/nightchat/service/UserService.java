@@ -16,4 +16,8 @@ public class UserService {
 	public User get(int id) {
 		return baseDao.get(id, User.class);
 	}
+
+	public void add(User user) {
+		baseDao.getSession().save(user);
+	}
 }
