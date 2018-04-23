@@ -4,8 +4,8 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Component;
 
-import com.nightchat.common.AllFunctions;
-import com.nightchat.common.AllFunctions.MethodWrapper;
+import com.nightchat.common.Functions;
+import com.nightchat.common.Functions.MethodWrapper;
 import com.nightchat.common.Packet;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -45,7 +45,7 @@ public class NettyBootstrap {
 						Request request = new Request();
 						request.packet = (Packet) msg;
 						request.channel = ctx.channel();
-						MethodWrapper method = AllFunctions.getMethod(request.packet.name);
+						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
 							System.out.println("不存在的协议" + request.packet.name);
 							return;

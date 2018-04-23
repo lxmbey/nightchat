@@ -44,7 +44,8 @@ dependencies {
 	compile 'io.netty:netty-all:4.0.36.Final','com.google.code.gson:gson:2.6.2','com.google.protobuf:protobuf-java:3.3.0'
 	
 	compile 'com.alibaba:fastjson:1.2.28','redis.clients:jedis:2.9.0','io.springfox:springfox-swagger2:2.6.1',
-            'io.springfox:springfox-swagger-ui:2.6.1'
+            'io.springfox:springfox-swagger-ui:2.6.1','org.springframework.data:spring-data-redis:2.0.6.RELEASE','org.aspectj:aspectjrt:1.8.10',
+            'org.aspectj:aspectjweaver:1.8.10'
             
     // log4j2
     compile 'org.apache.logging.log4j:log4j-api:2.10.0','org.apache.logging.log4j:log4j-core:2.10.0','org.apache.logging.log4j:log4j-slf4j-impl:2.10.0'

@@ -8,7 +8,10 @@ import javax.persistence.Id;
 
 @Entity
 public class User {
+	@Id
+	@Column(length = 64)
 	private String id;
+	@Column(unique = true)
 	private String phoneNum;
 	private String nickname;
 	private String sex;
@@ -29,8 +32,6 @@ public class User {
 		this.password = password;
 	}
 
-	@Id
-	@Column(length = 64)
 	public String getId() {
 		return id;
 	}

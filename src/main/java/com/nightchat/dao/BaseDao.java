@@ -14,7 +14,7 @@ public class BaseDao {
 		return sessionFactory.getCurrentSession();
 	}
 
-	public <T> T get(int id, Class<T> cla) {
+	public <T> T get(String id, Class<T> cla) {
 		return getSession().get(cla, id);
 	}
 }

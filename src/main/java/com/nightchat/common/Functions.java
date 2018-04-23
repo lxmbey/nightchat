@@ -16,7 +16,7 @@ import org.springframework.util.ReflectionUtils;
  * 游戏逻辑服务器所有提供给客户端调用的接口扫描，初始化并建立名称到Method的映射
  */
 @Component
-public class AllFunctions {
+public class Functions {
 
 	private static Map<String, MethodWrapper> methodMap = new HashMap<String, MethodWrapper>();
 
