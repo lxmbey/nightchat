@@ -4,7 +4,7 @@ public class BaseResponse {
 	public int code;
 	public String msg;
 
-	public static BaseResponse success = new BaseResponse(1, "");
+	public static BaseResponse SUCCESS = new BaseResponse(1, "");
 
 	public BaseResponse() {
 
@@ -18,10 +18,10 @@ public class BaseResponse {
 
 	public enum StatusCode {
 		SUCCESS(1), FAIL(2), SESSION_TIMEOUT(3);
-		public int vlaue;
+		public int value;
 
 		private StatusCode(int value) {
-
+			this.value = value;
 		}
 	}
 

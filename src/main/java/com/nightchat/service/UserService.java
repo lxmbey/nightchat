@@ -21,6 +21,7 @@ public class UserService {
 	public User getByPhone(String phoneNum) {
 		String sql = "from User where phoneNum = ?";
 		Query<User> query = baseDao.getSession().createQuery(sql, User.class);
+		query.setParameter(0, phoneNum);
 		return query.uniqueResult();
 	}
 

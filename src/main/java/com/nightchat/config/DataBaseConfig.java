@@ -1,4 +1,4 @@
-package com.nightchat.db;
+package com.nightchat.config;
 
 import java.beans.PropertyVetoException;
 import java.util.Properties;
@@ -12,7 +12,6 @@ import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.nightchat.config.Config;
 
 /**
  * 数据库配置类,对应于application.properties中的对应配置
@@ -20,7 +19,7 @@ import com.nightchat.config.Config;
 @Configuration
 public class DataBaseConfig {
 	@Autowired
-	private Config config;
+	private DBConfig config;
 
 	@Bean
 	public DataSource dataSource() {

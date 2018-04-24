@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties(prefix = "jdbc")
-public class Config {
+public class DBConfig {
 	private String url;
 	private String driver;
 	private String user;
