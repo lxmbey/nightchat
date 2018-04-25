@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nightchat.common.NotLoginException;
-import com.nightchat.view.BaseResponse;
-import com.nightchat.view.BaseResponse.StatusCode;
+import com.nightchat.view.BaseResp;
+import com.nightchat.view.BaseResp.StatusCode;
 
 /**
  * 全局异常处理
@@ -22,11 +22,11 @@ public class GlobalExceptionAdvice {
 	private static final Logger logger = LogManager.getLogger(GlobalExceptionAdvice.class);
 
 	@ExceptionHandler(value = Throwable.class)
-	public BaseResponse errorHandler(Throwable e) {
+	public BaseResp errorHandler(Throwable e) {
 		if (e instanceof NotLoginException) {
-			return new BaseResponse(StatusCode.SESSION_TIMEOUT.value, "未登陆操作");
+			return new BaseResp(StatusCode.SESSION_TIMEOUT.value, "未登陆操作");
 		}
 		logger.error(e.getMessage(), e);
-		return new BaseResponse(StatusCode.FAIL.value, "系统异常：" + e.getMessage());
+		return new BaseResp(StatusCode.FAIL.value, "系统异常：" + e.getMessage());
 	}
 }

@@ -23,6 +23,6 @@ public class Swagger2 {
 	}
 
 	private ApiInfo apiInfo() {
-		return new ApiInfoBuilder().title("").description("").version("1.0").build();
+		return new ApiInfoBuilder().title("夜聊项目接口文档").description("").version("1.0").build();
 	}
 }

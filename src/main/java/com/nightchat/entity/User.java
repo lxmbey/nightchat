@@ -13,7 +13,9 @@ public class User {
 	private String id;
 	@Column(unique = true)
 	private String phoneNum;
+	@Column(length = 50)
 	private String nickname;
+	@Column(length = 4)
 	private String sex;
 	private Date birthday;
 	private String password;
