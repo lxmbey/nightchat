@@ -2,6 +2,9 @@ package com.nightchat.net;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.nightchat.common.Functions;
@@ -24,6 +27,10 @@ import io.netty.handler.codec.LengthFieldPrepender;
 
 @Component
 public class NettyBootstrap {
+	private Logger log = LogManager.getLogger(getClass());
+
+	@Value("${netty.port}")
+	private int port;
 
 	@PostConstruct
 	public void start() {
@@ -47,7 +54,7 @@ public class NettyBootstrap {
 						request.channel = ctx.channel();
 						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
-							System.out.println("不存在的协议" + request.packet.name);
+							log.warn("不存在的协议" + request.packet.name);
 							return;
 						}
 						Object message = method.method.invoke(method.instance, request);
@@ -64,6 +71,6 @@ public class NettyBootstrap {
 		}).option(ChannelOption.SO_REUSEADDR, true).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true)
 				.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT).childOption(ChannelOption.TCP_NODELAY, true)
 				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-		bootstrap.bind(8888);
+		bootstrap.bind(port);
 	}
 }

@@ -49,6 +49,10 @@ public class UserController {
 		if (old != null) {
 			return BaseResp.fail("手机号已存在");
 		}
+		if (registReq.nickname == null || registReq.birthday == null || registReq.sex == null || registReq.password == null
+				|| (!registReq.sex.equals("男") && !registReq.sex.equals("女"))) {
+			return BaseResp.fail("输入参数错误");
+		}
 		String code = redisTemplate.opsForValue().get(Const.REDIS_VERIFY_KEY + registReq.phoneNum);
 		if (code != null && code.equals(registReq.smsCode)) {
 			redisTemplate.delete(Const.REDIS_VERIFY_KEY + registReq.phoneNum);
