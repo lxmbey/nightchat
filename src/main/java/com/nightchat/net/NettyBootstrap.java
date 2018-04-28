@@ -1,5 +1,7 @@
 package com.nightchat.net;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +26,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateHandler;
 
 @Component
 public class NettyBootstrap {
@@ -42,6 +45,7 @@ public class NettyBootstrap {
 				ChannelPipeline pipeline = ch.pipeline();
 				pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
 				pipeline.addLast(new LengthFieldPrepender(4));
+				pipeline.addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS));
 				pipeline.addLast(new MyEncoder());
 				pipeline.addLast(new MyDecoder());
 
@@ -64,6 +68,21 @@ public class NettyBootstrap {
 							packet.data = message.toString();
 							ctx.channel().writeAndFlush(packet);
 						}
+					}
+
+					@Override
+					public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+						log.error("", cause);
+					}
+
+					@Override
+					public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+						System.out.println("userEventTriggered" + evt.getClass());
+					}
+
+					@Override
+					public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+						System.out.println("handlerRemoved");
 					}
 
 				});

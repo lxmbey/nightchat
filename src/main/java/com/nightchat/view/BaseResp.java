@@ -10,6 +10,9 @@ public class BaseResp {
 	@ApiModelProperty("提示信息")
 	public String msg = "";
 
+	@ApiModelProperty("通用数据")
+	public String data;
+
 	public static BaseResp SUCCESS = new BaseResp(1, "");
 
 	public BaseResp() {

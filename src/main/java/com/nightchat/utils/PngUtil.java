@@ -91,26 +91,16 @@ public class PngUtil {
 		g.drawLine(x, y, x + xl, y + yl);
 	}
 
-	public static void main(String[] args) {
-		System.out.println(getRandCode("1234"));
-	}
-
-	public static String getImageStr(BufferedImage image) {
+	private static String getImageStr(BufferedImage image) {
 
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		//            InputStream is = new ByteArrayInputStream(os.toByteArray());
-		//	        byte[] data = null;
 		try {
-			//	            data = new byte[is.available()];
-			//	            is.read(data);
-			//	            is.close();
 			ImageIO.write(image, "JPEG", os);
+			//			FileOutputStream outputStream = new FileOutputStream("D://xxx.png");
+			//			outputStream.write(os.toByteArray());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//	        // 加密
-		//	        BASE64Encoder encoder = new BASE64Encoder();
-		//	        return encoder.encode(data);
 		String imgStr = Base64.getEncoder().encodeToString(os.toByteArray());
 		return imgStr;
 	}

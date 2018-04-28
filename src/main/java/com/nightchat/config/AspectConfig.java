@@ -32,7 +32,7 @@ public class AspectConfig {
 	private RedisTemplate<String, String> redisTemplate;
 
 	// Controller层切点  
-	@Pointcut("execution (* com.nightchat.controller..*(..))")
+	@Pointcut("execution (public * com.nightchat.controller.User*.*(..))")
 	public void controllerAspect() {
 	}
 

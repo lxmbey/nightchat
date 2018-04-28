@@ -18,6 +18,7 @@ import com.nightchat.common.NotLogin;
 import com.nightchat.entity.User;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
+import com.nightchat.utils.PngUtil;
 import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
@@ -28,7 +29,7 @@ import com.nightchat.view.UserInfoResp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
-@RestController("user")
+@RestController
 @RequestMapping("user")
 @Api(tags = "user")
 public class UserController {
@@ -53,9 +54,9 @@ public class UserController {
 				|| (!registReq.sex.equals("男") && !registReq.sex.equals("女"))) {
 			return BaseResp.fail("输入参数错误");
 		}
-		String code = redisTemplate.opsForValue().get(Const.REDIS_VERIFY_KEY + registReq.phoneNum);
+		String code = redisTemplate.opsForValue().get(Const.REDIS_SMS_KEY + registReq.phoneNum);
 		if (code != null && code.equals(registReq.smsCode)) {
-			redisTemplate.delete(Const.REDIS_VERIFY_KEY + registReq.phoneNum);
+			redisTemplate.delete(Const.REDIS_SMS_KEY + registReq.phoneNum);
 			User user = new User(StringUtils.randomUUID(), registReq.phoneNum, registReq.nickname, registReq.sex, DateUtils.parseDate(DateUtils.YearMonthDay, registReq.birthday),
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()));
 			userService.add(user);
@@ -102,12 +103,33 @@ public class UserController {
 	}
 
 	@NotLogin
-	@ApiOperation(value = "发短信接口", notes = "phoneNum手机号")
+	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
+	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
+	public BaseResp getPngImg(String phoneNum) {
+		if (StringUtils.isEmpty(phoneNum)) {
+			return BaseResp.fail("手机号码不能为空");
+		}
+		String code = StringUtils.generateRandomStr(4);
+		String imgStr = PngUtil.getRandCode(code);
+		redisTemplate.opsForValue().set(Const.REDIS_IMG_KEY + phoneNum, code, 5, TimeUnit.MINUTES);
+
+		BaseResp resp = BaseResp.SUCCESS;
+		resp.data = imgStr;
+		return resp;
+	}
+
+	@NotLogin
+	@ApiOperation(value = "发短信接口", notes = "phoneNum手机号,imgCode图形验证码")
 	@RequestMapping(value = "sendSms", method = RequestMethod.POST)
-	public BaseResp sendSms(String phoneNum) {
+	public BaseResp sendSms(String phoneNum, String imgCode) {
+		String redisCode = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + phoneNum);
+		if (redisCode == null || imgCode == null || !redisCode.equalsIgnoreCase(imgCode.toUpperCase())) {
+			return BaseResp.fail("验证码错误");
+		}
 		String code = StringUtils.generateSmsCode();
 		code = "1234";
-		redisTemplate.opsForValue().set(Const.REDIS_VERIFY_KEY + phoneNum, code, 10, TimeUnit.MINUTES);
+		redisTemplate.opsForValue().set(Const.REDIS_SMS_KEY + phoneNum, code, 10, TimeUnit.MINUTES);
 		return BaseResp.SUCCESS;
 	}
+
 }

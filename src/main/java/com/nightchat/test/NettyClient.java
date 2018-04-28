@@ -1,6 +1,9 @@
 package com.nightchat.test;
 
+import java.util.concurrent.TimeUnit;
+
 import com.nightchat.common.Packet;
+import com.nightchat.common.ThreadPool;
 import com.nightchat.net.MyDecoder;
 import com.nightchat.net.MyEncoder;
 
@@ -41,14 +44,21 @@ public class NettyClient {
 					@Override
 					public void channelActive(ChannelHandlerContext ctx) throws Exception {
 						Packet packet = new Packet();
-						packet.name = "user/login";
+						packet.name = "chat/sendMsg";
 						packet.data = "{'aa':100}";
+						ThreadPool.scheduleWithFixedDelay(new Runnable() {
+
+							@Override
+							public void run() {
+								ctx.writeAndFlush(packet);
+							}
+						}, 0, 2, TimeUnit.SECONDS);
 						ctx.writeAndFlush(packet);
 					}
 
 				});
 			}
 		}).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true);
-		bootstrap.connect("localhost", 8888);
+		bootstrap.connect("localhost", 28888);
 	}
 }

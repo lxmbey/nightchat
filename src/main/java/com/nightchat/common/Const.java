@@ -11,7 +11,12 @@ public class Const {
 	 */
 	public static String REDIS_SESSION_KEY = "redis_session_key:";
 	/**
-	 * redis里面的验证码key前缀
+	 * redis里面的短信验证码key前缀
 	 */
-	public static String REDIS_VERIFY_KEY = "redis_verify_key:";
+	public static String REDIS_SMS_KEY = "redis_sms_key:";
+
+	/**
+	 * redis里面的图形验证码key前缀
+	 */
+	public static String REDIS_IMG_KEY = "redis_img_key:";
 }
