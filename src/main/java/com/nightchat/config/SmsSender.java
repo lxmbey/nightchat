@@ -3,6 +3,7 @@ package com.nightchat.config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
@@ -16,15 +17,17 @@ public class SmsSender {
 	@Autowired
 	private HttpClientManager httpClientManager;
 
+	@Value("${sms.skdappid}")
 	private String sdkappid;
+	@Value("${sms.appkey}")
 	private String appkey;
 
-	static String url = "https://yun.tim.qq.com/v5/tlssmssvr/sendsms?sdkappid={}&random={}";
+	static String url = "https://yun.tim.qq.com/v5/tlssmssvr/sendsms?sdkappid=%s&random=%s";
 
 	public boolean sendSmsByTpl(String phoneNum, String tpl, String sign, String[] params) {
 		long time = System.currentTimeMillis() / 1000;
-		String random = StringUtils.generateRandomStr(6);
-		url = String.format(url, sdkappid, random);
+		String random = StringUtils.generateSmsCode();
+		String newUrl = String.format(url, sdkappid, random);
 		String sigStr = "appkey=" + appkey + "&random=" + random + "&time=" + time + "&mobile=" + phoneNum;
 		String sig = StringUtils.getSHA256StrJava(sigStr);
 		JSONObject jo = new JSONObject();
@@ -39,7 +42,7 @@ public class SmsSender {
 		jo.put("params", params);
 		String content;
 		try {
-			content = httpClientManager.httpJsonPost(url, jo.toJSONString()).getContent();
+			content = httpClientManager.httpJsonPost(newUrl, jo.toJSONString()).getContent();
 			JSONObject res = JSON.parseObject(content);
 			Integer result = res.getInteger("result");
 			if (result != null && result == 0) {

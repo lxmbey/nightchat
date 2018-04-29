@@ -15,6 +15,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.nightchat.common.Const;
 import com.nightchat.common.NotLogin;
+import com.nightchat.config.SmsSender;
 import com.nightchat.entity.User;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
@@ -41,6 +42,9 @@ public class UserController {
 
 	@Autowired
 	private RedisTemplate<String, String> redisTemplate;
+
+	@Autowired
+	private SmsSender smsSender;
 
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
@@ -76,7 +80,7 @@ public class UserController {
 			resp.code = StatusCode.SUCCESS.value;
 			String sessionKey = StringUtils.randomUUID();
 
-			//TODO 考虑加事务
+			// TODO 考虑加事务
 			String oldSessionKey = redisTemplate.opsForValue().get(Const.REDIS_USER_KEY + user.getId());
 			redisTemplate.delete(Const.REDIS_SESSION_KEY + oldSessionKey);
 			redisTemplate.opsForValue().set(Const.REDIS_USER_KEY + user.getId(), sessionKey);
@@ -127,7 +131,7 @@ public class UserController {
 			return BaseResp.fail("验证码错误");
 		}
 		String code = StringUtils.generateSmsCode();
-		code = "1234";
+		smsSender.sendSmsByTpl(phoneNum, "114901", "NightChat科技", new String[] { code, "10" });
 		redisTemplate.opsForValue().set(Const.REDIS_SMS_KEY + phoneNum, code, 10, TimeUnit.MINUTES);
 		return BaseResp.SUCCESS;
 	}
