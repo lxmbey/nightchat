@@ -57,3 +57,9 @@ configurations {
   all*.exclude module: 'logback-classic'
   all*.exclude module: 'log4j-to-slf4j'
 }
+
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"  
+}

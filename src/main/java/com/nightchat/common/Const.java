@@ -1,7 +1,8 @@
 package com.nightchat.common;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.nightchat.view.UserInfoResp;
 
 import io.netty.channel.Channel;
 
@@ -25,5 +26,7 @@ public class Const {
 	 */
 	public static String REDIS_IMG_KEY = "redis_img_key:";
 	
-	public static ConcurrentHashMap<Channel, String> onlineChannel = new ConcurrentHashMap<>();
+	public static ConcurrentHashMap<Channel, UserInfoResp> onlineChannel = new ConcurrentHashMap<>();
+
+	public static ConcurrentHashMap<String, Channel> onlineUser = new ConcurrentHashMap<>();
 }

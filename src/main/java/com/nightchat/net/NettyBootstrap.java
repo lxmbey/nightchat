@@ -9,8 +9,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.nightchat.common.Const;
 import com.nightchat.common.Functions;
+import com.nightchat.common.NotLogin;
 import com.nightchat.common.Functions.MethodWrapper;
+import com.nightchat.view.UserInfoResp;
 import com.nightchat.common.Packet;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -26,6 +29,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 
 @Component
@@ -45,7 +49,7 @@ public class NettyBootstrap {
 				ChannelPipeline pipeline = ch.pipeline();
 				pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
 				pipeline.addLast(new LengthFieldPrepender(4));
-				pipeline.addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS));
+				pipeline.addLast(new IdleStateHandler(11, 0, 0, TimeUnit.SECONDS));
 				pipeline.addLast(new MyEncoder());
 				pipeline.addLast(new MyDecoder());
 
@@ -59,6 +63,12 @@ public class NettyBootstrap {
 						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
 							log.warn("不存在的协议" + request.packet.name);
+							return;
+						}
+						NotLogin notLogin = method.method.getAnnotation(NotLogin.class);
+						if (notLogin == null && !Const.onlineChannel.containsKey(ctx.channel())) {
+							log.warn("未登录操作");
+							ctx.channel().close();
 							return;
 						}
 						Object message = method.method.invoke(method.instance, request);
@@ -77,12 +87,18 @@ public class NettyBootstrap {
 
 					@Override
 					public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-						System.out.println("userEventTriggered" + evt.getClass());
+						if (evt instanceof IdleStateEvent) {
+							log.warn("空闲超时");
+							ctx.channel().close();
+						}
 					}
 
 					@Override
 					public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-						System.out.println("handlerRemoved");
+						UserInfoResp userInfo = Const.onlineChannel.remove(ctx.channel());
+						if (userInfo != null) {
+							Const.onlineUser.remove(userInfo.id);
+						}
 					}
 
 				});

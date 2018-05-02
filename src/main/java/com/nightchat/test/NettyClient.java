@@ -1,9 +1,7 @@
 package com.nightchat.test;
 
-import java.util.concurrent.TimeUnit;
-
+import com.alibaba.fastjson.JSON;
 import com.nightchat.common.Packet;
-import com.nightchat.common.ThreadPool;
 import com.nightchat.net.MyDecoder;
 import com.nightchat.net.MyEncoder;
 
@@ -38,21 +36,15 @@ public class NettyClient {
 					@Override
 					public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 						Packet packet = (Packet) msg;
-						System.out.println(packet.name);
+						System.out.println(JSON.toJSONString(packet));
 					}
 
 					@Override
 					public void channelActive(ChannelHandlerContext ctx) throws Exception {
 						Packet packet = new Packet();
-						packet.name = "chat/sendMsg";
-						packet.data = "{'aa':100}";
-						ThreadPool.scheduleWithFixedDelay(new Runnable() {
-
-							@Override
-							public void run() {
-								ctx.writeAndFlush(packet);
-							}
-						}, 0, 2, TimeUnit.SECONDS);
+						packet.name = "chat/chatLogin";
+						packet.data = "{'session_key':'95e4e7820c554d45bf6985dcd98971ea'}";
+						
 						ctx.writeAndFlush(packet);
 					}
 
