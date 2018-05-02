@@ -28,4 +28,8 @@ public class UserService {
 	public void add(User user) {
 		baseDao.getSession().save(user);
 	}
+
+	public void update(User user) {
+		baseDao.getSession().update(user);
+	}
 }

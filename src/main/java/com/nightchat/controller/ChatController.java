@@ -48,8 +48,8 @@ public class ChatController {
 			String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 			if (userId != null) {
 				User user = userService.getById(userId);
-				Const.onlineChannel.put(request.channel,
-						new UserInfoResp(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday())));
+				Const.onlineChannel.put(request.channel, new UserInfoResp(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(),
+						DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()), user.getHeadImgUrl()));
 				Const.onlineUser.put(userId, request.channel);
 				return JSON.toJSONString(BaseResp.SUCCESS);
 			}

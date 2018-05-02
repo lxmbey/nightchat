@@ -13,7 +13,7 @@ public class StringUtils {
 	public static Random random = new Random();
 
 	public static boolean isEmpty(String str) {
-		return str == null || str.length() <= 0;
+		return str == null || str.trim().length() <= 0;
 	}
 
 	/**

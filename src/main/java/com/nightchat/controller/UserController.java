@@ -62,7 +62,7 @@ public class UserController {
 		if (code != null && code.equals(registReq.smsCode)) {
 			redisTemplate.delete(Const.REDIS_SMS_KEY + registReq.phoneNum);
 			User user = new User(StringUtils.randomUUID(), registReq.phoneNum, registReq.nickname, registReq.sex, DateUtils.parseDate(DateUtils.YearMonthDay, registReq.birthday),
-					DigestUtils.md5DigestAsHex(registReq.password.getBytes()));
+					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
 			userService.add(user);
 			return BaseResp.SUCCESS;
 		} else {
@@ -102,7 +102,7 @@ public class UserController {
 		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 		User user = userService.getById(userId);
 		UserInfoResp infoResp = new UserInfoResp(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(),
-				DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()));
+				DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()), user.getHeadImgUrl());
 		return infoResp;
 	}
 
@@ -134,6 +134,66 @@ public class UserController {
 		smsSender.sendSmsByTpl(phoneNum, "114901", "NightChat科技", new String[] { code, "10" });
 		redisTemplate.opsForValue().set(Const.REDIS_SMS_KEY + phoneNum, code, 10, TimeUnit.MINUTES);
 		return BaseResp.SUCCESS;
+	}
+
+	@ApiOperation(value = "修改基本资料", notes = "")
+	@RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
+	public BaseResp updateUserInfo(String nickname, String birthday, String headImg) {
+		if (StringUtils.isEmpty(nickname) || StringUtils.isEmpty(birthday) || StringUtils.isEmpty(headImg)) {
+			return BaseResp.fail("输入参数错误");
+		}
+
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		String sessionKey = request.getHeader(Const.SESSION_KEY);
+		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		User user = userService.getById(userId);
+		user.setBirthday(DateUtils.parseDate(DateUtils.YearMonthDay, birthday));
+		user.setNickname(nickname);
+		user.setHeadImgUrl(headImg);
+		userService.update(user);
+
+		return BaseResp.SUCCESS;
+	}
+
+	@ApiOperation(value = "修改密码", notes = "")
+	@RequestMapping(value = "updatePwd", method = RequestMethod.POST)
+	public BaseResp updatePwd(String oldPwd, String newPwd) {
+		if (StringUtils.isEmpty(oldPwd) || StringUtils.isEmpty(newPwd)) {
+			return BaseResp.fail("输入参数错误");
+		}
+
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		String sessionKey = request.getHeader(Const.SESSION_KEY);
+		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		User user = userService.getById(userId);
+		if (!user.getPassword().equals(DigestUtils.md5DigestAsHex(oldPwd.getBytes()))) {
+			return BaseResp.fail("原密码错误");
+		}
+		user.setPassword(DigestUtils.md5DigestAsHex(newPwd.getBytes()));
+		userService.update(user);
+
+		return BaseResp.SUCCESS;
+	}
+
+	@NotLogin
+	@ApiOperation(value = "找回密码", notes = "")
+	@RequestMapping(value = "findPwd", method = RequestMethod.POST)
+	public BaseResp findPwd(String phoneNum, String smsCode, String newPwd) {
+		if (StringUtils.isEmpty(phoneNum) || StringUtils.isEmpty(smsCode) || StringUtils.isEmpty(newPwd)) {
+			return BaseResp.fail("输入参数错误");
+		}
+		User user = userService.getByPhone(phoneNum);
+		if (user == null) {
+			return BaseResp.fail("用户不存在");
+		}
+		String code = redisTemplate.opsForValue().get(Const.REDIS_SMS_KEY + phoneNum);
+		if (code != null && code.equals(smsCode)) {
+			user.setPassword(DigestUtils.md5DigestAsHex(newPwd.getBytes()));
+			userService.update(user);
+			return BaseResp.SUCCESS;
+		}
+
+		return BaseResp.fail("短信验证码错误");
 	}
 
 }

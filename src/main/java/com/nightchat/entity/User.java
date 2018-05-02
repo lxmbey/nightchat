@@ -19,12 +19,13 @@ public class User {
 	private String sex;
 	private Date birthday;
 	private String password;
+	private String headImgUrl;
 
 	public User() {
 
 	}
 
-	public User(String id, String phoneNum, String nickname, String sex, Date birthday, String password) {
+	public User(String id, String phoneNum, String nickname, String sex, Date birthday, String password, String headImgUrl) {
 		super();
 		this.id = id;
 		this.phoneNum = phoneNum;
@@ -32,6 +33,7 @@ public class User {
 		this.sex = sex;
 		this.birthday = birthday;
 		this.password = password;
+		this.headImgUrl = headImgUrl;
 	}
 
 	public String getId() {
@@ -80,6 +82,14 @@ public class User {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getHeadImgUrl() {
+		return headImgUrl;
+	}
+
+	public void setHeadImgUrl(String headImgUrl) {
+		this.headImgUrl = headImgUrl;
 	}
 
 }
