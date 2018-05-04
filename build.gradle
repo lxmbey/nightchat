@@ -49,6 +49,8 @@ dependencies {
             
     // log4j2
     compile 'org.apache.logging.log4j:log4j-api:2.10.0','org.apache.logging.log4j:log4j-core:2.10.0','org.apache.logging.log4j:log4j-slf4j-impl:2.10.0'
+    
+    compile fileTree(dir:'lib',include:['*.jar'])
 		
 	//testCompile('org.springframework.boot:spring-boot-starter-test')
 }
