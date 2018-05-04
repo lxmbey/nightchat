@@ -13,8 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.http.MethodType;
+import com.aliyuncs.http.ProtocolType;
+import com.aliyuncs.profile.DefaultProfile;
+import com.aliyuncs.profile.IClientProfile;
+import com.aliyuncs.sts.model.v20150401.AssumeRoleRequest;
+import com.aliyuncs.sts.model.v20150401.AssumeRoleResponse;
 import com.nightchat.common.Const;
 import com.nightchat.common.NotLogin;
+import com.nightchat.config.AliyunConfig;
 import com.nightchat.config.SmsSender;
 import com.nightchat.entity.User;
 import com.nightchat.service.UserService;
@@ -25,6 +34,7 @@ import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.LoginResp;
 import com.nightchat.view.RegistReq;
+import com.nightchat.view.UploadTokenResp;
 import com.nightchat.view.UserInfoResp;
 
 import io.swagger.annotations.Api;
@@ -45,6 +55,9 @@ public class UserController {
 
 	@Autowired
 	private SmsSender smsSender;
+
+	@Autowired
+	private AliyunConfig aliyunConfig;
 
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
@@ -194,6 +207,65 @@ public class UserController {
 		}
 
 		return BaseResp.fail("短信验证码错误");
+	}
+
+	@ApiOperation(value = "获取图片上传Token")
+	@RequestMapping(value = "getUploadToken", method = RequestMethod.POST)
+	public UploadTokenResp getUploadToken() {
+		UploadTokenResp resp = new UploadTokenResp();
+
+		String accessKeyId = aliyunConfig.getAccessKeyID();
+		String accessKeySecret = aliyunConfig.getAccessKeySecret();
+		// RoleArn 需要在 RAM 控制台上获取
+		String roleArn = aliyunConfig.getRoleArn();
+		long durationSeconds = aliyunConfig.getTokenExpireTime();
+		String policy = StringUtils.readFileContent(aliyunConfig.getPolicyFile());
+		// RoleSessionName 是临时Token的会话名称，自己指定用于标识你的用户，主要用于审计，或者用于区分Token颁发给谁
+		// 但是注意RoleSessionName的长度和规则，不要有空格，只能有'-' '_' 字母和数字等字符
+		// 具体规则请参考API文档中的格式要求
+		String roleSessionName = "alice-001";
+
+		// 此处必须为 HTTPS
+		ProtocolType protocolType = ProtocolType.HTTPS;
+
+		try {
+			final AssumeRoleResponse stsResponse = assumeRole(accessKeyId, accessKeySecret, roleArn, roleSessionName, policy, protocolType, durationSeconds);
+			resp.accessKeyId = stsResponse.getCredentials().getAccessKeyId();
+			resp.accessKeySecret = stsResponse.getCredentials().getAccessKeySecret();
+			resp.securityToken = stsResponse.getCredentials().getSecurityToken();
+			resp.expiration = stsResponse.getCredentials().getExpiration();
+		} catch (ClientException e) {
+			resp.code = StatusCode.FAIL.value;
+			resp.msg = e.getErrCode() + ":" + e.getErrMsg();
+		}
+		return resp;
+	}
+
+	private AssumeRoleResponse assumeRole(String accessKeyId, String accessKeySecret, String roleArn, String roleSessionName, String policy, ProtocolType protocolType,
+			long durationSeconds) throws ClientException {
+		try {
+			// 创建一个 Aliyun Acs Client, 用于发起 OpenAPI 请求
+			IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, accessKeySecret);
+			DefaultAcsClient client = new DefaultAcsClient(profile);
+
+			// 创建一个 AssumeRoleRequest 并设置请求参数
+			final AssumeRoleRequest request = new AssumeRoleRequest();
+			request.setVersion("2015-04-01");
+			request.setMethod(MethodType.POST);
+			request.setProtocol(protocolType);
+
+			request.setRoleArn(roleArn);
+			request.setRoleSessionName(roleSessionName);
+			request.setPolicy(policy);
+			request.setDurationSeconds(durationSeconds);
+
+			// 发起请求，并得到response
+			final AssumeRoleResponse response = client.getAcsResponse(request);
+
+			return response;
+		} catch (ClientException e) {
+			throw e;
+		}
 	}
 
 }

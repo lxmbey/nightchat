@@ -3,7 +3,7 @@ package com.nightchat.view;
 import io.swagger.annotations.ApiModelProperty;
 
 public class BaseResp {
-	@ApiModelProperty("请求状态码")
+	@ApiModelProperty("请求状态码，1成功2失败3会话超时")
 	public int code = StatusCode.SUCCESS.value;
 	@ApiModelProperty("提示信息")
 	public String msg = "";
