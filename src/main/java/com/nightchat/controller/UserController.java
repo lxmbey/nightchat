@@ -223,7 +223,9 @@ public class UserController {
 		// RoleSessionName 是临时Token的会话名称，自己指定用于标识你的用户，主要用于审计，或者用于区分Token颁发给谁
 		// 但是注意RoleSessionName的长度和规则，不要有空格，只能有'-' '_' 字母和数字等字符
 		// 具体规则请参考API文档中的格式要求
-		String roleSessionName = "alice-001";
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		String sessionKey = request.getHeader(Const.SESSION_KEY);
+		String roleSessionName = sessionKey;
 
 		// 此处必须为 HTTPS
 		ProtocolType protocolType = ProtocolType.HTTPS;
