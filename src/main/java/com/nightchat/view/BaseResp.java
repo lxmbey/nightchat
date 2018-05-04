@@ -1,9 +1,7 @@
 package com.nightchat.view;
 
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel("基础返回")
 public class BaseResp {
 	@ApiModelProperty("请求状态码")
 	public int code = StatusCode.SUCCESS.value;

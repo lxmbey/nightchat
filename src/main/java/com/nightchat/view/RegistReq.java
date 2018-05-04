@@ -1,9 +1,7 @@
 package com.nightchat.view;
 
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel("用户注册参数")
 public class RegistReq {
 	public String phoneNum;
 	public String nickname;
