@@ -77,4 +77,36 @@ public class DateUtils {
 	public static String currentDatetime() {
 		return formatDate(DateDayTime, new Date());
 	}
+	
+	/**
+	 * 获取当前时间至指定时的点间隔毫秒数 如果当前钟点大于指定钟点数，则结果是当前时间至第二天指定时的间隔毫秒数
+	 * 
+	 * @param taskHour
+	 * @param taskMiniute
+	 * @return
+	 */
+	public static long betweenTaskHourMillis(int taskHour, int taskMiniute) {
+		if (taskHour < 0) {
+			taskHour = 0;
+		}
+		if (taskHour > 23) {
+			taskHour = 23;
+		}
+		if (taskMiniute < 0) {
+			taskMiniute = 0;
+		}
+		if (taskMiniute > 59) {
+			taskMiniute = 59;
+		}
+
+		Calendar c = Calendar.getInstance();
+		int nowHour = c.get(Calendar.HOUR_OF_DAY);
+		if (nowHour > taskHour || (nowHour == taskHour && c.get(Calendar.MINUTE) >= taskMiniute)) {
+			c.add(Calendar.DAY_OF_MONTH, 1);
+		}
+		c.set(Calendar.HOUR_OF_DAY, taskHour);
+		c.set(Calendar.MINUTE, taskMiniute);
+		c.set(Calendar.SECOND, 0);
+		return c.getTimeInMillis() - System.currentTimeMillis();
+	}
 }

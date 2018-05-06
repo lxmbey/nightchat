@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,6 +59,9 @@ public class UserController {
 
 	@Autowired
 	private AliyunConfig aliyunConfig;
+
+	@Value("${sms.daycount}")
+	private int smsDayCount;
 
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
@@ -143,9 +147,34 @@ public class UserController {
 		if (redisCode == null || imgCode == null || !redisCode.equalsIgnoreCase(imgCode.toUpperCase())) {
 			return BaseResp.fail("验证码错误");
 		}
+		String oldCode = redisTemplate.opsForValue().get(Const.REDIS_SMS_KEY + phoneNum);
+		if (oldCode != null) {
+			return BaseResp.SUCCESS;
+		}
+		long delayTime = DateUtils.betweenTaskHourMillis(0, 0);// 发送记录清空倒计时
+		String num = redisTemplate.opsForValue().get(Const.REDIS_PHONE_SMS_COUNT_KEY + phoneNum);
+		int phoneSendNum = 0;
+		int ipSendNum = 0;
+		if (num != null) {
+			phoneSendNum = StringUtils.parseInt(num);
+			if (phoneSendNum >= smsDayCount) {
+				return BaseResp.fail("手机号码发送短信条数达到上限");
+			}
+		}
+		String ip = StringUtils.getIpAddr();
+		num = redisTemplate.opsForValue().get(Const.REDIS_IP_SMS_COUNT_KEY + ip);
+		if (num != null) {
+			ipSendNum = StringUtils.parseInt(num);
+			if (ipSendNum >= smsDayCount) {
+				return BaseResp.fail("IP发送短信条数达到上限");
+			}
+		}
 		String code = StringUtils.generateSmsCode();
-		smsSender.sendSmsByTpl(phoneNum, "114901", "NightChat科技", new String[] { code, "10" });
-		redisTemplate.opsForValue().set(Const.REDIS_SMS_KEY + phoneNum, code, 10, TimeUnit.MINUTES);
+		smsSender.sendSmsByTpl(phoneNum, "114901", "NightChat科技", new String[] { code, "5" });
+		redisTemplate.opsForValue().set(Const.REDIS_SMS_KEY + phoneNum, code, 5, TimeUnit.MINUTES);
+
+		redisTemplate.opsForValue().set(Const.REDIS_PHONE_SMS_COUNT_KEY + phoneNum, String.valueOf(phoneSendNum + 1), delayTime, TimeUnit.MILLISECONDS);
+		redisTemplate.opsForValue().set(Const.REDIS_IP_SMS_COUNT_KEY + ip, String.valueOf(ipSendNum + 1), delayTime, TimeUnit.MILLISECONDS);
 		return BaseResp.SUCCESS;
 	}
 
