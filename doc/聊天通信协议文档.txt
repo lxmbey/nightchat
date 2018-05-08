@@ -1,0 +1,36 @@
+说明：
+TCP端口：28888
+1、通信传输数据格式统一使用JSON。每个消息分为接口名name和数据data两个部分，data也是一个JSON对象。示例：{"name":"chat/sendMsg","data":{"msgType":0}}
+所有通信接口都是这种格式，变化的是name和data内容。
+2、socket单个包的格式：前4个字节为单次通信JSON数据的byte长度，后面为数据内容。假如要发送 abc ，把abc转成byte[]取长度为3，流里面先写入数字3，再写入abc的byte内容，
+整个完整的包长度为4+3=7个字节。
+
+一、聊天登录接口
+	name:chat/chatLogin
+	data:{"session_key":"xxx"}
+	session_key为http登录时返回的session_key。
+	
+	服务器返回：
+	name:chat/chatLogin
+	data:{"code":1,"msg":""}
+	
+二、心跳请求（登录后5秒发一次）
+	name:chat/heart
+	data:{}
+	
+	服务器返回：
+	name:chat/heart
+	data:{}
+	
+三、发送聊天消息
+	name:chat/sendMsg
+	data:{"msgType":0,"content":"xx","receiverId":"123456"}
+	msgType=0文字消息，1语音，2图片
+	
+	服务器返回:
+	name:chat/sendMsg
+	data:{"code":1,"msg":""}
+	
+四、服务器主动推送聊天消息
+	name:chat/receiveMsg
+	data:{"msgType":0,"content":"xx","datetime":"2018-05-02 12:00:00","userInfo":{发送者信息，参考getUserInfo接口返回}}
