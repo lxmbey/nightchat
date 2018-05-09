@@ -1,5 +1,7 @@
 package com.nightchat.service;
 
+import java.util.List;
+
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,5 +33,11 @@ public class UserService {
 
 	public void update(User user) {
 		baseDao.getSession().update(user);
+	}
+
+	public List<User> searchUser(int size, String selfId) {
+		Query<User> query = baseDao.getSession().createQuery("from User where id !=:selfId", User.class).setMaxResults(size);
+		query.setParameter("selfId", selfId);
+		return query.list();
 	}
 }

@@ -1,5 +1,7 @@
 package com.nightchat.controller;
 
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +28,10 @@ import com.nightchat.common.Const;
 import com.nightchat.common.NotLogin;
 import com.nightchat.config.AliyunConfig;
 import com.nightchat.config.SmsSender;
+import com.nightchat.entity.ApplyLog;
 import com.nightchat.entity.User;
+import com.nightchat.service.ApplyLogService;
+import com.nightchat.service.UserFriendService;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
 import com.nightchat.utils.PngUtil;
@@ -43,6 +48,7 @@ import com.nightchat.view.UploadTokenResp;
 import com.nightchat.view.UserInfoData;
 import com.nightchat.view.UserInfoResp;
 
+import io.netty.channel.Channel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -64,6 +70,12 @@ public class UserController {
 
 	@Autowired
 	private AliyunConfig aliyunConfig;
+
+	@Autowired
+	private ApplyLogService applyLogService;
+
+	@Autowired
+	private UserFriendService userFriendService;
 
 	@Value("${sms.daycount}")
 	private int smsDayCount;
@@ -122,9 +134,7 @@ public class UserController {
 	@RequestMapping(value = "getUserInfo", method = RequestMethod.POST)
 	public UserInfoResp getUserInfo() {
 		UserInfoResp resp = new UserInfoResp();
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		String sessionKey = request.getHeader(Const.SESSION_KEY);
-		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		UserInfoData data = new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
 				user.getHeadImgUrl());
@@ -217,9 +227,7 @@ public class UserController {
 			return BaseResp.fail("输入参数错误");
 		}
 
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		String sessionKey = request.getHeader(Const.SESSION_KEY);
-		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		if (!user.getPassword().equals(DigestUtils.md5DigestAsHex(oldPwd.getBytes()))) {
 			return BaseResp.fail("原密码错误");
@@ -311,4 +319,103 @@ public class UserController {
 		}
 	}
 
+	@ApiOperation(value = "聊天匹配")
+	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
+	public UserInfoResp chatMatch() {
+		UserInfoResp resp = new UserInfoResp();
+		String userId = getCurrentUserId();
+		User user = userService.getById(userId);
+		int count = 0;
+		UserInfoData info = null;
+		while (Const.onlineChannel.size() > 1 && count < Const.onlineChannel.size()) {
+			count++;
+			UserInfoData[] onlineUser = Const.onlineChannel.values().toArray(new UserInfoData[0]);
+			info = onlineUser[StringUtils.randomInt(onlineUser.length)];
+			if (info.id.equals(userId)) {
+				info = null;
+				continue;
+			}
+		}
+		if (info == null) {
+			List<User> users = userService.searchUser(20, userId);
+			if (!users.isEmpty()) {
+				User u = users.get(StringUtils.randomInt(users.size()));
+				info = new UserInfoData(u.getId(), u.getPhoneNum(), u.getNickname(), u.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, u.getBirthday()), u.getHeadImgUrl());
+			}
+		}
+		if (info == null) {
+			resp.code = StatusCode.FAIL.value;
+			resp.msg = "未匹配到合适用户";
+		}
+
+		UserInfoData data = new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
+				user.getHeadImgUrl());
+		resp.data = data;
+		return resp;
+	}
+
+	@ApiOperation(value = "申请添加好友")
+	@RequestMapping(value = "applyFriend", method = RequestMethod.POST)
+	public BaseResp applyFriend(String friendId) {
+		String userId = getCurrentUserId();
+		User friendUser = userService.getById(friendId);
+		if (friendUser == null) {
+			return BaseResp.fail("好友不存在");
+		}
+		if (userFriendService.isExist(userId, friendId)) {
+			return BaseResp.fail("对方和你已经是好友关系");
+		}
+		UserInfoData infoData = Const.onlineChannel.get(Const.onlineUser.get(userId));
+		ApplyLog applyLog = applyLogService.findLog(userId, friendId);
+		if (applyLog == null) {
+			applyLog = new ApplyLog(StringUtils.randomUUID(), userId, friendId, new Date());
+			applyLogService.add(applyLog);
+		}
+		Channel channel = Const.onlineUser.get(friendId);
+		if (channel == null) {
+			// TODO 极光推送
+		} else {
+			ChatController.applyFriend(channel, infoData);
+		}
+
+		return BaseResp.SUCCESS;
+	}
+
+	@ApiOperation(value = "同意好友申请", notes = "applyUserId-发起申请者ID")
+	@RequestMapping(value = "agreeApply", method = RequestMethod.POST)
+	public BaseResp agreeApply(String applyUserId) {
+		String userId = getCurrentUserId();
+		User friendUser = userService.getById(applyUserId);
+		if (friendUser == null) {
+			return BaseResp.fail("好友不存在");
+		}
+		if (userFriendService.isExist(userId, applyUserId)) {
+			return BaseResp.fail("对方和你已经是好友关系");
+		}
+		UserInfoData infoData = Const.onlineChannel.get(Const.onlineUser.get(userId));
+		ApplyLog applyLog = applyLogService.findLog(applyUserId, userId);
+		if (applyLog == null) {
+			return BaseResp.fail("未找到申请记录");
+		}
+		User user = userService.getById(userId);
+		userFriendService.addFriend(friendUser, user, applyLog);
+		Channel channel = Const.onlineUser.get(applyUserId);
+		if (channel != null) {
+			ChatController.agreeApply(channel, infoData);
+		}
+
+		return BaseResp.SUCCESS;
+	}
+
+	/**
+	 * 获取当前用户的ID
+	 * 
+	 * @return
+	 */
+	private String getCurrentUserId() {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		String sessionKey = request.getHeader(Const.SESSION_KEY);
+		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		return userId;
+	}
 }

@@ -59,8 +59,7 @@ public class StringUtils {
 	/**
 	 * 利用java原生的摘要实现SHA256加密
 	 * 
-	 * @param str
-	 *            加密后的报文
+	 * @param str 加密后的报文
 	 * @return
 	 */
 	public static String getSHA256StrJava(String str) {
@@ -186,5 +185,9 @@ public class StringUtils {
 			ip = request.getRemoteAddr();
 		}
 		return ip;
+	}
+
+	public static int randomInt(int range) {
+		return random.nextInt(range);
 	}
 }

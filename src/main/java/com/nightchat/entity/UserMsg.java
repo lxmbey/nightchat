@@ -15,6 +15,21 @@ public class UserMsg extends BaseEntity {
 	@Column(length = 2000)
 	private String msgContent;
 
+	public UserMsg() {
+
+	}
+
+	public UserMsg(String id, String userId, String sendUserId, int status, Date sendDate, int msgType, String msgContent) {
+		super();
+		this.id = id;
+		this.userId = userId;
+		this.sendUserId = sendUserId;
+		this.status = status;
+		this.sendDate = sendDate;
+		this.msgType = msgType;
+		this.msgContent = msgContent;
+	}
+
 	public String getUserId() {
 		return userId;
 	}

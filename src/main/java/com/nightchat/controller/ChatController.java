@@ -1,5 +1,7 @@
 package com.nightchat.controller;
 
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
@@ -11,9 +13,12 @@ import com.nightchat.common.NotLogin;
 import com.nightchat.common.Packet;
 import com.nightchat.common.Push;
 import com.nightchat.entity.User;
+import com.nightchat.entity.UserMsg;
 import com.nightchat.net.Request;
+import com.nightchat.service.UserMsgService;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
+import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.ChatMsgResp;
 import com.nightchat.view.ChatReq;
@@ -30,13 +35,28 @@ public class ChatController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	private UserMsgService userMsgService;
+
 	// 发送聊天消息
 	public String sendMsg(Request request) {
 		ChatReq chatReq = JSON.parseObject(request.packet.data, ChatReq.class);
 		ChatMsgResp chatMsgResp = new ChatMsgResp(chatReq.msgType, chatReq.content, DateUtils.currentDatetime());
 		chatMsgResp.userInfo = Const.onlineChannel.get(request.channel);
 		Channel channel = Const.onlineUser.get(chatReq.receiverId);
-		receiveMsg(channel, chatMsgResp);
+		UserInfoData sendUser = Const.onlineChannel.get(request.channel);
+		UserMsg userMsg = new UserMsg(StringUtils.randomUUID(), chatReq.receiverId, sendUser.id, 0, new Date(), chatReq.msgType, chatReq.content);
+		if (channel == null) {// 不在线
+			User receiverUser = userService.getById(chatReq.receiverId);
+			if (receiverUser != null) {
+				userMsgService.add(userMsg);
+				//TODO 极光推送
+			}
+		} else {
+			userMsg.setStatus(1);// 已读
+			userMsgService.add(userMsg);
+			receiveMsg(channel, chatMsgResp);
+		}
 		return JSON.toJSONString(BaseResp.SUCCESS);
 	}
 
@@ -65,8 +85,18 @@ public class ChatController {
 	}
 
 	@Push
-	public void receiveMsg(Channel channel, ChatMsgResp msg) {
+	public static void receiveMsg(Channel channel, ChatMsgResp msg) {
 		channel.writeAndFlush(new Packet("receiveMsg", JSON.toJSONString(msg)));
+	}
+
+	@Push
+	public static void applyFriend(Channel channel, UserInfoData infoData) {
+		channel.writeAndFlush(new Packet("applyFriend", JSON.toJSONString(infoData)));
+	}
+
+	@Push
+	public static void agreeApply(Channel channel, UserInfoData infoData) {
+		channel.writeAndFlush(new Packet("agreeApply", JSON.toJSONString(infoData)));
 	}
 
 }

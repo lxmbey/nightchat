@@ -3,7 +3,6 @@ package com.nightchat.common;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.nightchat.view.UserInfoData;
-import com.nightchat.view.UserInfoResp;
 
 import io.netty.channel.Channel;
 
@@ -26,18 +25,29 @@ public class Const {
 	 * redis里面的图形验证码key前缀
 	 */
 	public static String REDIS_IMG_KEY = "redis_img_key:";
-	
+
 	/**
 	 * IP当天发送短信条数KEY
 	 */
 	public static String REDIS_IP_SMS_COUNT_KEY = "redis_ip_sms_count_key:";
-	
+
 	/**
 	 * 手机当天发送短信条数
 	 */
 	public static String REDIS_PHONE_SMS_COUNT_KEY = "redis_phone_sms_count_key:";
-	
+
+	/**
+	 * 好友请求key
+	 */
+	public static String REDIS_APPLY_FRIEND_KEY = "redis_apply_friend_key:";
+
+	/**
+	 * key-Channel,value-UserInfoData
+	 */
 	public static ConcurrentHashMap<Channel, UserInfoData> onlineChannel = new ConcurrentHashMap<>();
 
+	/**
+	 * key-UserId,value-Channel
+	 */
 	public static ConcurrentHashMap<String, Channel> onlineUser = new ConcurrentHashMap<>();
 }
