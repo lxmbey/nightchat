@@ -5,7 +5,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
-@Entity
+@Entity(name = "user")
 public class User extends BaseEntity {
 	@Column(unique = true)
 	private String phoneNum;
