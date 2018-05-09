@@ -21,7 +21,7 @@ public class UserService {
 	}
 
 	public User getByPhone(String phoneNum) {
-		String sql = "from User where phoneNum = :phoneNum";
+		String sql = "from user where phoneNum = :phoneNum";
 		Query<User> query = baseDao.getSession().createQuery(sql, User.class);
 		query.setParameter("phoneNum", phoneNum);
 		return query.uniqueResult();
@@ -36,7 +36,7 @@ public class UserService {
 	}
 
 	public List<User> searchUser(int size, String selfId) {
-		Query<User> query = baseDao.getSession().createQuery("from User where id !=:selfId", User.class).setMaxResults(size);
+		Query<User> query = baseDao.getSession().createQuery("from user where id !=:selfId", User.class).setMaxResults(size);
 		query.setParameter("selfId", selfId);
 		return query.list();
 	}

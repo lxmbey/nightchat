@@ -24,7 +24,7 @@ public class UserFriendService {
 	}
 
 	public boolean isExist(String userId, String friendId) {
-		String hql = "from UserFriend where userId =:userId and friend.id = :friendId";
+		String hql = "from user_friend where userId =:userId and friend.id = :friendId";
 		Query<User> query = baseDao.getSession().createQuery(hql, User.class);
 		query.setParameter("userId", userId);
 		query.setParameter("friendId", friendId);

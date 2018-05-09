@@ -21,7 +21,7 @@ public class ApplyLogService {
 	}
 
 	public ApplyLog findLog(String applyId, String friendId) {
-		String hql = "from ApplyLog where applyUserId=:userId and friendUserId=:friendId";
+		String hql = "from apply_log where applyUserId=:userId and friendUserId=:friendId";
 		Query<ApplyLog> query = baseDao.getSession().createQuery(hql, ApplyLog.class);
 		query.setParameter("userId", applyId);
 		query.setParameter("friendId", friendId);

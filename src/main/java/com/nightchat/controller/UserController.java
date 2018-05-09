@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,12 +38,17 @@ import com.nightchat.utils.DateUtils;
 import com.nightchat.utils.PngUtil;
 import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
+import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.BaseResp.StatusCode;
+import com.nightchat.view.LoginReq;
 import com.nightchat.view.LoginResp;
 import com.nightchat.view.LoginRespData;
 import com.nightchat.view.PngImgData;
 import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
+import com.nightchat.view.SendSmsReq;
+import com.nightchat.view.UpdatePwdReq;
+import com.nightchat.view.UpdateUserInfoReq;
 import com.nightchat.view.UploadTokenData;
 import com.nightchat.view.UploadTokenResp;
 import com.nightchat.view.UserInfoData;
@@ -83,14 +89,14 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
 	@RequestMapping(value = "regist", method = RequestMethod.POST)
-	public BaseResp regist(RegistReq registReq) {
-		User old = userService.getByPhone(registReq.phoneNum);
-		if (old != null) {
-			return BaseResp.fail("手机号已存在");
-		}
+	public BaseResp regist(@RequestBody RegistReq registReq) {
 		if (registReq.nickname == null || registReq.birthday == null || registReq.sex == null || registReq.password == null
 				|| (!registReq.sex.equals("男") && !registReq.sex.equals("女"))) {
 			return BaseResp.fail("输入参数错误");
+		}
+		User old = userService.getByPhone(registReq.phoneNum);
+		if (old != null) {
+			return BaseResp.fail("手机号已存在");
 		}
 		String code = redisTemplate.opsForValue().get(Const.REDIS_SMS_KEY + registReq.phoneNum);
 		if (code != null && code.equals(registReq.smsCode)) {
@@ -107,10 +113,10 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "登录接口", notes = "phoneNum手机号,password密码")
 	@RequestMapping(value = "login", method = RequestMethod.POST)
-	public LoginResp login(String phoneNum, String password) {
+	public LoginResp login(@RequestBody LoginReq loginReq) {
 		LoginResp resp = new LoginResp();
-		User user = userService.getByPhone(phoneNum);
-		if (user != null && password != null && DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.getPassword())) {
+		User user = userService.getByPhone(loginReq.phoneNum);
+		if (user != null && loginReq.password != null && DigestUtils.md5DigestAsHex(loginReq.password.getBytes()).equals(user.getPassword())) {
 			resp.code = StatusCode.SUCCESS.value;
 			String sessionKey = StringUtils.randomUUID();
 
@@ -145,7 +151,7 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
-	public PngImgResp getPngImg(String phoneNum) {
+	public PngImgResp getPngImg(@RequestBody String phoneNum) {
 		PngImgResp resp = new PngImgResp();
 		if (StringUtils.isEmpty(phoneNum)) {
 			resp.code = StatusCode.FAIL.value;
@@ -165,7 +171,10 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "发短信接口", notes = "phoneNum手机号,imgCode图形验证码")
 	@RequestMapping(value = "sendSms", method = RequestMethod.POST)
-	public BaseResp sendSms(String phoneNum, String imgCode) {
+	public BaseResp sendSms(@RequestBody SendSmsReq sendSmsReq) {
+		String phoneNum = sendSmsReq.phoneNum;
+		String imgCode = sendSmsReq.imgCode;
+
 		String redisCode = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + phoneNum);
 		if (redisCode == null || imgCode == null || !redisCode.equalsIgnoreCase(imgCode.toUpperCase())) {
 			return BaseResp.fail("验证码错误");
@@ -203,7 +212,10 @@ public class UserController {
 
 	@ApiOperation(value = "修改基本资料", notes = "")
 	@RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
-	public BaseResp updateUserInfo(String nickname, String birthday, String headImg) {
+	public BaseResp updateUserInfo(@RequestBody UpdateUserInfoReq req) {
+		String nickname = req.nickname;
+		String birthday = req.birthday;
+		String headImg = req.headImg;
 		if (StringUtils.isEmpty(nickname) || StringUtils.isEmpty(birthday) || StringUtils.isEmpty(headImg)) {
 			return BaseResp.fail("输入参数错误");
 		}
@@ -222,7 +234,9 @@ public class UserController {
 
 	@ApiOperation(value = "修改密码", notes = "")
 	@RequestMapping(value = "updatePwd", method = RequestMethod.POST)
-	public BaseResp updatePwd(String oldPwd, String newPwd) {
+	public BaseResp updatePwd(@RequestBody UpdatePwdReq req) {
+		String oldPwd = req.oldPwd;
+		String newPwd = req.newPwd;
 		if (StringUtils.isEmpty(oldPwd) || StringUtils.isEmpty(newPwd)) {
 			return BaseResp.fail("输入参数错误");
 		}
@@ -241,7 +255,10 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "找回密码", notes = "")
 	@RequestMapping(value = "findPwd", method = RequestMethod.POST)
-	public BaseResp findPwd(String phoneNum, String smsCode, String newPwd) {
+	public BaseResp findPwd(@RequestBody FindPwdReq req) {
+		String phoneNum = req.phoneNum;
+		String smsCode = req.smsCode;
+		String newPwd = req.newPwd;
 		if (StringUtils.isEmpty(phoneNum) || StringUtils.isEmpty(smsCode) || StringUtils.isEmpty(newPwd)) {
 			return BaseResp.fail("输入参数错误");
 		}
@@ -356,7 +373,7 @@ public class UserController {
 
 	@ApiOperation(value = "申请添加好友")
 	@RequestMapping(value = "applyFriend", method = RequestMethod.POST)
-	public BaseResp applyFriend(String friendId) {
+	public BaseResp applyFriend(@RequestBody String friendId) {
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(friendId);
 		if (friendUser == null) {
@@ -383,7 +400,7 @@ public class UserController {
 
 	@ApiOperation(value = "同意好友申请", notes = "applyUserId-发起申请者ID")
 	@RequestMapping(value = "agreeApply", method = RequestMethod.POST)
-	public BaseResp agreeApply(String applyUserId) {
+	public BaseResp agreeApply(@RequestBody String applyUserId) {
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(applyUserId);
 		if (friendUser == null) {
