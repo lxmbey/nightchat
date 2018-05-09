@@ -34,8 +34,13 @@ import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.LoginResp;
+import com.nightchat.view.LoginRespData;
+import com.nightchat.view.PngImgData;
+import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
+import com.nightchat.view.UploadTokenData;
 import com.nightchat.view.UploadTokenResp;
+import com.nightchat.view.UserInfoData;
 import com.nightchat.view.UserInfoResp;
 
 import io.swagger.annotations.Api;
@@ -103,7 +108,9 @@ public class UserController {
 			redisTemplate.opsForValue().set(Const.REDIS_USER_KEY + user.getId(), sessionKey);
 			redisTemplate.opsForValue().set(Const.REDIS_SESSION_KEY + sessionKey, user.getId(), 30, TimeUnit.MINUTES);
 
-			resp.sessionKey = sessionKey;
+			LoginRespData data = new LoginRespData();
+			data.sessionKey = sessionKey;
+			resp.data = data;
 		} else {
 			resp.code = StatusCode.FAIL.value;
 			resp.msg = "用户名或密码错误";
@@ -114,28 +121,34 @@ public class UserController {
 	@ApiOperation(value = "获取用户信息", notes = "")
 	@RequestMapping(value = "getUserInfo", method = RequestMethod.POST)
 	public UserInfoResp getUserInfo() {
+		UserInfoResp resp = new UserInfoResp();
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 		String sessionKey = request.getHeader(Const.SESSION_KEY);
 		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 		User user = userService.getById(userId);
-		UserInfoResp infoResp = new UserInfoResp(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(),
-				DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()), user.getHeadImgUrl());
-		return infoResp;
+		UserInfoData data = new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
+				user.getHeadImgUrl());
+		resp.data = data;
+		return resp;
 	}
 
 	@NotLogin
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
-	public BaseResp getPngImg(String phoneNum) {
+	public PngImgResp getPngImg(String phoneNum) {
+		PngImgResp resp = new PngImgResp();
 		if (StringUtils.isEmpty(phoneNum)) {
-			return BaseResp.fail("手机号码不能为空");
+			resp.code = StatusCode.FAIL.value;
+			resp.msg = "手机号码不能为空";
+			return resp;
 		}
 		String code = StringUtils.generateRandomStr(4);
 		String imgStr = PngUtil.getRandCode(code);
 		redisTemplate.opsForValue().set(Const.REDIS_IMG_KEY + phoneNum, code, 5, TimeUnit.MINUTES);
 
-		BaseResp resp = BaseResp.SUCCESS;
-		resp.data = imgStr;
+		PngImgData data = new PngImgData();
+		data.pngStr = imgStr;
+		resp.data = data;
 		return resp;
 	}
 
@@ -261,10 +274,9 @@ public class UserController {
 
 		try {
 			final AssumeRoleResponse stsResponse = assumeRole(accessKeyId, accessKeySecret, roleArn, roleSessionName, policy, protocolType, durationSeconds);
-			resp.accessKeyId = stsResponse.getCredentials().getAccessKeyId();
-			resp.accessKeySecret = stsResponse.getCredentials().getAccessKeySecret();
-			resp.securityToken = stsResponse.getCredentials().getSecurityToken();
-			resp.expiration = stsResponse.getCredentials().getExpiration();
+			UploadTokenData data = new UploadTokenData(stsResponse.getCredentials().getAccessKeyId(), stsResponse.getCredentials().getAccessKeySecret(),
+					stsResponse.getCredentials().getSecurityToken(), stsResponse.getCredentials().getExpiration());
+			resp.data = data;
 		} catch (ClientException e) {
 			resp.code = StatusCode.FAIL.value;
 			resp.msg = e.getErrCode() + ":" + e.getErrMsg();

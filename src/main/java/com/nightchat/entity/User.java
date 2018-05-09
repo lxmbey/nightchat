@@ -4,13 +4,9 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 @Entity
-public class User {
-	@Id
-	@Column(length = 64)
-	private String id;
+public class User extends BaseEntity {
 	@Column(unique = true)
 	private String phoneNum;
 	@Column(length = 50)
@@ -26,7 +22,6 @@ public class User {
 	}
 
 	public User(String id, String phoneNum, String nickname, String sex, Date birthday, String password, String headImgUrl) {
-		super();
 		this.id = id;
 		this.phoneNum = phoneNum;
 		this.nickname = nickname;
@@ -34,14 +29,6 @@ public class User {
 		this.birthday = birthday;
 		this.password = password;
 		this.headImgUrl = headImgUrl;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public String getPhoneNum() {

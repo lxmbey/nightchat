@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 
 import com.nightchat.common.Const;
 import com.nightchat.common.Functions;
-import com.nightchat.common.NotLogin;
 import com.nightchat.common.Functions.MethodWrapper;
-import com.nightchat.view.UserInfoResp;
+import com.nightchat.common.NotLogin;
 import com.nightchat.common.Packet;
+import com.nightchat.view.UserInfoData;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -95,7 +95,7 @@ public class NettyBootstrap {
 
 					@Override
 					public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-						UserInfoResp userInfo = Const.onlineChannel.remove(ctx.channel());
+						UserInfoData userInfo = Const.onlineChannel.remove(ctx.channel());
 						if (userInfo != null) {
 							Const.onlineUser.remove(userInfo.id);
 						}

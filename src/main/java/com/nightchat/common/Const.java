@@ -2,6 +2,7 @@ package com.nightchat.common;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.nightchat.view.UserInfoData;
 import com.nightchat.view.UserInfoResp;
 
 import io.netty.channel.Channel;
@@ -36,7 +37,7 @@ public class Const {
 	 */
 	public static String REDIS_PHONE_SMS_COUNT_KEY = "redis_phone_sms_count_key:";
 	
-	public static ConcurrentHashMap<Channel, UserInfoResp> onlineChannel = new ConcurrentHashMap<>();
+	public static ConcurrentHashMap<Channel, UserInfoData> onlineChannel = new ConcurrentHashMap<>();
 
 	public static ConcurrentHashMap<String, Channel> onlineUser = new ConcurrentHashMap<>();
 }

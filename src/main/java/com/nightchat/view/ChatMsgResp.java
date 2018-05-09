@@ -3,7 +3,7 @@ package com.nightchat.view;
 public class ChatMsgResp {
 	public int msgType;
 	public String content;
-	public UserInfoResp userInfo;
+	public UserInfoData userInfo;
 	public String sendTime;
 
 	public ChatMsgResp() {

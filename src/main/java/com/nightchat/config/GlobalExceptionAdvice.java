@@ -27,6 +27,6 @@ public class GlobalExceptionAdvice {
 			return new BaseResp(StatusCode.SESSION_TIMEOUT.value, "未登陆操作");
 		}
 		logger.error(e.getMessage(), e);
-		return new BaseResp(StatusCode.FAIL.value, "系统异常：" + e.getMessage());
+		return new BaseResp(StatusCode.ERROR.value, "系统异常：" + e.getMessage());
 	}
 }

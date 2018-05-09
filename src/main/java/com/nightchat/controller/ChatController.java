@@ -17,7 +17,7 @@ import com.nightchat.utils.DateUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.ChatMsgResp;
 import com.nightchat.view.ChatReq;
-import com.nightchat.view.UserInfoResp;
+import com.nightchat.view.UserInfoData;
 
 import io.netty.channel.Channel;
 
@@ -35,7 +35,8 @@ public class ChatController {
 		ChatReq chatReq = JSON.parseObject(request.packet.data, ChatReq.class);
 		ChatMsgResp chatMsgResp = new ChatMsgResp(chatReq.msgType, chatReq.content, DateUtils.currentDatetime());
 		chatMsgResp.userInfo = Const.onlineChannel.get(request.channel);
-		receiveMsg(Const.onlineUser.get(chatReq.receiverId), chatMsgResp);
+		Channel channel = Const.onlineUser.get(chatReq.receiverId);
+		receiveMsg(channel, chatMsgResp);
 		return JSON.toJSONString(BaseResp.SUCCESS);
 	}
 
@@ -48,7 +49,7 @@ public class ChatController {
 			String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 			if (userId != null) {
 				User user = userService.getById(userId);
-				Const.onlineChannel.put(request.channel, new UserInfoResp(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(),
+				Const.onlineChannel.put(request.channel, new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(),
 						DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()), user.getHeadImgUrl()));
 				Const.onlineUser.put(userId, request.channel);
 				return JSON.toJSONString(BaseResp.SUCCESS);
