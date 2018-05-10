@@ -37,6 +37,8 @@ import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
 import com.nightchat.utils.PngUtil;
 import com.nightchat.utils.StringUtils;
+import com.nightchat.view.AgreeApplyReq;
+import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.BaseResp.StatusCode;
@@ -44,6 +46,7 @@ import com.nightchat.view.LoginReq;
 import com.nightchat.view.LoginResp;
 import com.nightchat.view.LoginRespData;
 import com.nightchat.view.PngImgData;
+import com.nightchat.view.PngImgReq;
 import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
 import com.nightchat.view.SendSmsReq;
@@ -151,7 +154,8 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
-	public PngImgResp getPngImg(@RequestBody String phoneNum) {
+	public PngImgResp getPngImg(@RequestBody PngImgReq req) {
+		String phoneNum = req.phoneNum;
 		PngImgResp resp = new PngImgResp();
 		if (StringUtils.isEmpty(phoneNum)) {
 			resp.code = StatusCode.FAIL.value;
@@ -373,7 +377,8 @@ public class UserController {
 
 	@ApiOperation(value = "申请添加好友")
 	@RequestMapping(value = "applyFriend", method = RequestMethod.POST)
-	public BaseResp applyFriend(@RequestBody String friendId) {
+	public BaseResp applyFriend(@RequestBody ApplyFriendReq req) {
+		String friendId = req.friendId;
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(friendId);
 		if (friendUser == null) {
@@ -400,7 +405,8 @@ public class UserController {
 
 	@ApiOperation(value = "同意好友申请", notes = "applyUserId-发起申请者ID")
 	@RequestMapping(value = "agreeApply", method = RequestMethod.POST)
-	public BaseResp agreeApply(@RequestBody String applyUserId) {
+	public BaseResp agreeApply(@RequestBody AgreeApplyReq req) {
+		String applyUserId = req.applyUserId;
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(applyUserId);
 		if (friendUser == null) {
