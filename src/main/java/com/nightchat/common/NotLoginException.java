@@ -1,7 +1,7 @@
 package com.nightchat.common;
 
 /**
- * 未登陆异常
+ * 未登录异常
  * 
  * @author lxm
  *

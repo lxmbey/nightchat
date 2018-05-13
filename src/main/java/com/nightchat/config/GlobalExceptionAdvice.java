@@ -24,7 +24,7 @@ public class GlobalExceptionAdvice {
 	@ExceptionHandler(value = Throwable.class)
 	public BaseResp errorHandler(Throwable e) {
 		if (e instanceof NotLoginException) {
-			return new BaseResp(StatusCode.SESSION_TIMEOUT.value, "未登陆操作");
+			return new BaseResp(StatusCode.SESSION_TIMEOUT.value, "未登录操作");
 		}
 		logger.error(e.getMessage(), e);
 		return new BaseResp(StatusCode.ERROR.value, "系统异常：" + e.getMessage());
