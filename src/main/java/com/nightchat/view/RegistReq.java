@@ -12,4 +12,9 @@ public class RegistReq {
 	public String password;
 	@ApiModelProperty("短信验证码")
 	public String smsCode;
+
+	@ApiModelProperty("经度")
+	public String longitude;
+	@ApiModelProperty("纬度")
+	public String latitude;
 }

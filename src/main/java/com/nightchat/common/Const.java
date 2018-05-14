@@ -50,4 +50,13 @@ public class Const {
 	 * key-UserId,value-Channel
 	 */
 	public static ConcurrentHashMap<String, Channel> onlineUser = new ConcurrentHashMap<>();
+
+	public enum MsgType {
+		TEXT(0), VOICE(1), IMG(2);
+		public int value;
+
+		private MsgType(int value) {
+			this.value = value;
+		}
+	}
 }

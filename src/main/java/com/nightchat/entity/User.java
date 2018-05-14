@@ -17,6 +17,13 @@ public class User extends BaseEntity {
 	private String password;
 	private String headImgUrl;
 
+	@Column(updatable = false)
+	private String registIp;
+	// 经度
+	private double longitude;
+	// 纬度
+	private double latitude;
+
 	public User() {
 
 	}

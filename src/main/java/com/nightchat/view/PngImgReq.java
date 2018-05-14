@@ -1,5 +1,8 @@
 package com.nightchat.view;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class PngImgReq {
-	public String phoneNum;
+	@ApiModelProperty("设备唯一ID")
+	public String deviceId;
 }

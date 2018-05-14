@@ -1,5 +1,8 @@
 package com.nightchat.view;
 
+import com.nightchat.entity.User;
+import com.nightchat.utils.DateUtils;
+
 public class UserInfoData {
 	public String id;
 	public String phoneNum;
@@ -20,5 +23,10 @@ public class UserInfoData {
 		this.sex = sex;
 		this.birthday = birthday;
 		this.headImgUrl = headImgUrl;
+	}
+
+	public static UserInfoData fromUser(User user) {
+		return new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
+				user.getHeadImgUrl());
 	}
 }

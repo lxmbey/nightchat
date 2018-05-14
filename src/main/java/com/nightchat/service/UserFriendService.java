@@ -1,6 +1,7 @@
 package com.nightchat.service;
 
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class UserFriendService {
 
 	public boolean isExist(String userId, String friendId) {
 		String hql = "from user_friend where userId =:userId and friend.id = :friendId";
-		Query<User> query = baseDao.getSession().createQuery(hql, User.class);
+		Query<UserFriend> query = baseDao.getSession().createQuery(hql, UserFriend.class);
 		query.setParameter("userId", userId);
 		query.setParameter("friendId", friendId);
 		return !query.list().isEmpty();
@@ -47,5 +48,22 @@ public class UserFriendService {
 		add(friend2);
 
 		baseDao.getSession().delete(applyLog);
+	}
+
+	public List<UserFriend> getFriends(String userId) {
+		String hql = "from user_friend where userId =:userId";
+		Query<UserFriend> query = baseDao.getSession().createQuery(hql, UserFriend.class);
+		query.setParameter("userId", userId);
+		List<UserFriend> list = query.list();
+
+		return list;
+	}
+
+	public void deleteFriend(String userId, String friendId) {
+		String hql = "delete from user_friend where (userId =:userId and friend.id = :friendId) or (userId =:friendId and friend.id = :userId)";
+		Query<UserFriend> query = baseDao.getSession().createQuery(hql, UserFriend.class);
+		query.setParameter("userId", userId);
+		query.setParameter("friendId", friendId);
+		query.executeUpdate();
 	}
 }

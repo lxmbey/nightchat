@@ -1,5 +1,6 @@
 package com.nightchat.controller;
 
+import java.text.MessageFormat;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import com.nightchat.net.Request;
 import com.nightchat.service.UserMsgService;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
+import com.nightchat.utils.PushUtil;
 import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.ChatMsgResp;
@@ -50,11 +52,17 @@ public class ChatController {
 			User receiverUser = userService.getById(chatReq.receiverId);
 			if (receiverUser != null) {
 				userMsgService.add(userMsg);
-				//TODO 极光推送
+				String alert = userMsg.getMsgContent();
+				if (userMsg.getMsgType() == Const.MsgType.IMG.value) {
+					alert = MessageFormat.format("{0}发来了一张图片", sendUser.nickname);
+				} else if (userMsg.getMsgType() == Const.MsgType.VOICE.value) {
+					alert = MessageFormat.format("{0}发来了一条语音", sendUser.nickname);
+				}
+				PushUtil.sendPushWithCallback(receiverUser.getId(), alert);
 			}
 		} else {
-			userMsg.setStatus(1);// 已读
-			userMsgService.add(userMsg);
+			//			userMsg.setStatus(1);// 已读
+			//			userMsgService.add(userMsg);
 			receiveMsg(channel, chatMsgResp);
 		}
 		return JSON.toJSONString(BaseResp.SUCCESS);
@@ -80,8 +88,8 @@ public class ChatController {
 
 	// 心跳
 	@NotLogin
-	public void heart(Request request) {
-		request.channel.writeAndFlush(new Packet("heart", ""));
+	public String heart(Request request) {
+		return "";
 	}
 
 	@Push

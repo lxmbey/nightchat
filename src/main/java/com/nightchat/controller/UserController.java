@@ -1,7 +1,11 @@
 package com.nightchat.controller;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,25 +35,34 @@ import com.nightchat.config.AliyunConfig;
 import com.nightchat.config.SmsSender;
 import com.nightchat.entity.ApplyLog;
 import com.nightchat.entity.User;
+import com.nightchat.entity.UserFriend;
+import com.nightchat.entity.UserMsg;
 import com.nightchat.service.ApplyLogService;
 import com.nightchat.service.UserFriendService;
+import com.nightchat.service.UserMsgService;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
 import com.nightchat.utils.PngUtil;
+import com.nightchat.utils.PushUtil;
 import com.nightchat.utils.StringUtils;
 import com.nightchat.view.AgreeApplyReq;
 import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.FindPwdReq;
+import com.nightchat.view.FriendsResp;
 import com.nightchat.view.BaseResp.StatusCode;
+import com.nightchat.view.ChatMatchReq;
 import com.nightchat.view.LoginReq;
 import com.nightchat.view.LoginResp;
 import com.nightchat.view.LoginRespData;
+import com.nightchat.view.MsgData;
 import com.nightchat.view.PngImgData;
 import com.nightchat.view.PngImgReq;
 import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
 import com.nightchat.view.SendSmsReq;
+import com.nightchat.view.UnreadMsgData;
+import com.nightchat.view.UnreadMsgResp;
 import com.nightchat.view.UpdatePwdReq;
 import com.nightchat.view.UpdateUserInfoReq;
 import com.nightchat.view.UploadTokenData;
@@ -85,6 +98,9 @@ public class UserController {
 
 	@Autowired
 	private UserFriendService userFriendService;
+
+	@Autowired
+	private UserMsgService userMsgService;
 
 	@Value("${sms.daycount}")
 	private int smsDayCount;
@@ -145,9 +161,38 @@ public class UserController {
 		UserInfoResp resp = new UserInfoResp();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
-		UserInfoData data = new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
-				user.getHeadImgUrl());
+		UserInfoData data = UserInfoData.fromUser(user);
 		resp.data = data;
+		return resp;
+	}
+
+	@ApiOperation(value = "获取好友列表")
+	@RequestMapping(value = "getFriends", method = RequestMethod.POST)
+	public FriendsResp getFriends() {
+		FriendsResp resp = new FriendsResp();
+		List<UserInfoData> datas = new ArrayList<>();
+		String userId = getCurrentUserId();
+		List<UserFriend> list = userFriendService.getFriends(userId);
+		for (UserFriend u : list) {
+			datas.add(UserInfoData.fromUser(u.getFriend()));
+		}
+		return resp;
+	}
+
+	@ApiOperation(value = "获取未读消息")
+	@RequestMapping(value = "getUnreadMsg", method = RequestMethod.POST)
+	public UnreadMsgResp getUnreadMsg() {
+		UnreadMsgResp resp = new UnreadMsgResp();
+		String userId = getCurrentUserId();
+		Map<String, List<UserMsg>> map = userMsgService.getUnreadMsg(userId);
+		for (Entry<String, List<UserMsg>> entry : map.entrySet()) {
+			UnreadMsgData data = new UnreadMsgData();
+			data.userInfo = UserInfoData.fromUser(userService.getById(entry.getKey()));
+			for (UserMsg m : entry.getValue()) {
+				data.msgData.add(new MsgData(m.getMsgType(), m.getMsgContent(), DateUtils.formatDate(DateUtils.DateDayTime, m.getSendDate())));
+			}
+			resp.data.add(data);
+		}
 		return resp;
 	}
 
@@ -155,16 +200,16 @@ public class UserController {
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
 	public PngImgResp getPngImg(@RequestBody PngImgReq req) {
-		String phoneNum = req.phoneNum;
+		String deviceId = req.deviceId;
 		PngImgResp resp = new PngImgResp();
-		if (StringUtils.isEmpty(phoneNum)) {
+		if (StringUtils.isEmpty(deviceId)) {
 			resp.code = StatusCode.FAIL.value;
-			resp.msg = "手机号码不能为空";
+			resp.msg = "设备ID不能为空";
 			return resp;
 		}
 		String code = StringUtils.generateRandomStr(4);
 		String imgStr = PngUtil.getRandCode(code);
-		redisTemplate.opsForValue().set(Const.REDIS_IMG_KEY + phoneNum, code, 5, TimeUnit.MINUTES);
+		redisTemplate.opsForValue().set(Const.REDIS_IMG_KEY + deviceId, code, 5, TimeUnit.MINUTES);
 
 		PngImgData data = new PngImgData();
 		data.pngStr = imgStr;
@@ -178,8 +223,12 @@ public class UserController {
 	public BaseResp sendSms(@RequestBody SendSmsReq sendSmsReq) {
 		String phoneNum = sendSmsReq.phoneNum;
 		String imgCode = sendSmsReq.imgCode;
+		String deviceId = sendSmsReq.deviceId;
+		if (StringUtils.isEmpty(phoneNum) || StringUtils.isEmpty(imgCode) || StringUtils.isEmpty(deviceId)) {
+			return BaseResp.fail("输入参数错误");
+		}
 
-		String redisCode = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + phoneNum);
+		String redisCode = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + deviceId);
 		if (redisCode == null || imgCode == null || !redisCode.equalsIgnoreCase(imgCode.toUpperCase())) {
 			return BaseResp.fail("验证码错误");
 		}
@@ -342,7 +391,7 @@ public class UserController {
 
 	@ApiOperation(value = "聊天匹配")
 	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
-	public UserInfoResp chatMatch() {
+	public UserInfoResp chatMatch(@RequestBody ChatMatchReq req) {
 		UserInfoResp resp = new UserInfoResp();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
@@ -395,7 +444,7 @@ public class UserController {
 		}
 		Channel channel = Const.onlineUser.get(friendId);
 		if (channel == null) {
-			// TODO 极光推送
+			PushUtil.sendPushWithCallback(friendId, MessageFormat.format("{0}申请添加你为好友", infoData.nickname));
 		} else {
 			ChatController.applyFriend(channel, infoData);
 		}

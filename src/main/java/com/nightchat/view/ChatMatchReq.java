@@ -2,10 +2,7 @@ package com.nightchat.view;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class LoginReq {
-	public String phoneNum;
-	public String password;
-
+public class ChatMatchReq {
 	@ApiModelProperty("经度")
 	public String longitude;
 	@ApiModelProperty("纬度")
