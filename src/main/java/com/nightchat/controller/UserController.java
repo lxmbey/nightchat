@@ -124,6 +124,12 @@ public class UserController {
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
 			user.setRegistIp(StringUtils.getIpAddr());
 			user.setDeviceId(registReq.deviceId);
+			if (!StringUtils.isEmpty(registReq.longitude)) {
+				user.setLongitude(StringUtils.parseDouble(registReq.longitude));
+			}
+			if (!StringUtils.isEmpty(registReq.latitude)) {
+				user.setLatitude(StringUtils.parseDouble(registReq.latitude));
+			}
 			userService.add(user);
 			return BaseResp.SUCCESS;
 		} else {
