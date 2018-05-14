@@ -86,4 +86,28 @@ public class User extends BaseEntity {
 		this.headImgUrl = headImgUrl;
 	}
 
+	public String getRegistIp() {
+		return registIp;
+	}
+
+	public void setRegistIp(String registIp) {
+		this.registIp = registIp;
+	}
+
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(double longitude) {
+		this.longitude = longitude;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(double latitude) {
+		this.latitude = latitude;
+	}
+
 }

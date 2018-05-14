@@ -122,6 +122,7 @@ public class UserController {
 			redisTemplate.delete(Const.REDIS_SMS_KEY + registReq.phoneNum);
 			User user = new User(StringUtils.randomUUID(), registReq.phoneNum, registReq.nickname, registReq.sex, DateUtils.parseDate(DateUtils.YearMonthDay, registReq.birthday),
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
+			user.setRegistIp(StringUtils.getIpAddr());
 			userService.add(user);
 			return BaseResp.SUCCESS;
 		} else {
