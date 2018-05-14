@@ -48,16 +48,15 @@ import com.nightchat.utils.StringUtils;
 import com.nightchat.view.AgreeApplyReq;
 import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
-import com.nightchat.view.FindPwdReq;
-import com.nightchat.view.FriendsResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.ChatMatchReq;
+import com.nightchat.view.FindPwdReq;
+import com.nightchat.view.FriendsResp;
 import com.nightchat.view.LoginReq;
 import com.nightchat.view.LoginResp;
 import com.nightchat.view.LoginRespData;
 import com.nightchat.view.MsgData;
 import com.nightchat.view.PngImgData;
-import com.nightchat.view.PngImgReq;
 import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
 import com.nightchat.view.SendSmsReq;
@@ -123,7 +122,7 @@ public class UserController {
 			User user = new User(StringUtils.randomUUID(), registReq.phoneNum, registReq.nickname, registReq.sex, DateUtils.parseDate(DateUtils.YearMonthDay, registReq.birthday),
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
 			user.setRegistIp(StringUtils.getIpAddr());
-			user.setDeviceId(registReq.deviceId);
+			user.setDeviceId(getHeadParam("device_id"));
 			if (!StringUtils.isEmpty(registReq.longitude)) {
 				user.setLongitude(StringUtils.parseDouble(registReq.longitude));
 			}
@@ -207,8 +206,8 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
-	public PngImgResp getPngImg(@RequestBody PngImgReq req) {
-		String deviceId = req.deviceId;
+	public PngImgResp getPngImg() {
+		String deviceId = getHeadParam("device_id");
 		PngImgResp resp = new PngImgResp();
 		if (StringUtils.isEmpty(deviceId)) {
 			resp.code = StatusCode.FAIL.value;
@@ -231,7 +230,7 @@ public class UserController {
 	public BaseResp sendSms(@RequestBody SendSmsReq sendSmsReq) {
 		String phoneNum = sendSmsReq.phoneNum;
 		String imgCode = sendSmsReq.imgCode;
-		String deviceId = sendSmsReq.deviceId;
+		String deviceId = getHeadParam("device_id");
 		if (StringUtils.isEmpty(phoneNum) || StringUtils.isEmpty(imgCode) || StringUtils.isEmpty(deviceId)) {
 			return BaseResp.fail("输入参数错误");
 		}
@@ -497,5 +496,14 @@ public class UserController {
 		String sessionKey = request.getHeader(Const.SESSION_KEY);
 		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 		return userId;
+	}
+
+	/**
+	 * 获取Head参数
+	 */
+	private String getHeadParam(String key) {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+		String value = request.getHeader(key);
+		return value;
 	}
 }
