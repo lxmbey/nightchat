@@ -17,8 +17,11 @@ public class User extends BaseEntity {
 	private String password;
 	private String headImgUrl;
 
-	@Column(updatable = false)
+	@Column(updatable = false, length = 100)
 	private String registIp;
+	// 设备ID
+	@Column(updatable = false, length = 100)
+	private String deviceId;
 	// 经度
 	private double longitude;
 	// 纬度
@@ -108,6 +111,14 @@ public class User extends BaseEntity {
 
 	public void setLatitude(double latitude) {
 		this.latitude = latitude;
+	}
+
+	public String getDeviceId() {
+		return deviceId;
+	}
+
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
 	}
 
 }

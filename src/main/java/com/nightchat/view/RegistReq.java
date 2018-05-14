@@ -17,4 +17,6 @@ public class RegistReq {
 	public String longitude;
 	@ApiModelProperty("纬度")
 	public String latitude;
+	@ApiModelProperty("设备ID")
+	public String deviceId;
 }

@@ -123,6 +123,7 @@ public class UserController {
 			User user = new User(StringUtils.randomUUID(), registReq.phoneNum, registReq.nickname, registReq.sex, DateUtils.parseDate(DateUtils.YearMonthDay, registReq.birthday),
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
 			user.setRegistIp(StringUtils.getIpAddr());
+			user.setDeviceId(registReq.deviceId);
 			userService.add(user);
 			return BaseResp.SUCCESS;
 		} else {
