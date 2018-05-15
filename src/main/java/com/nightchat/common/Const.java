@@ -59,4 +59,8 @@ public class Const {
 			this.value = value;
 		}
 	}
+
+	public enum DeviceType {
+		ANDROID, IOS
+	}
 }

@@ -22,6 +22,9 @@ public class User extends BaseEntity {
 	// 设备ID
 	@Column(updatable = false, length = 100)
 	private String deviceId;
+	// 设备类型
+	@Column(updatable = false, nullable = false)
+	private int deviceType;
 	// 经度
 	private double longitude;
 	// 纬度
@@ -119,6 +122,14 @@ public class User extends BaseEntity {
 
 	public void setDeviceId(String deviceId) {
 		this.deviceId = deviceId;
+	}
+
+	public int getDeviceType() {
+		return deviceType;
+	}
+
+	public void setDeviceType(int deviceType) {
+		this.deviceType = deviceType;
 	}
 
 }

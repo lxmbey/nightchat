@@ -47,7 +47,7 @@ public class UserFriendService {
 		friend2.setFriend(applyUser);
 		add(friend2);
 
-		baseDao.getSession().delete(applyLog);
+		baseDao.delete(applyLog);
 	}
 
 	public List<UserFriend> getFriends(String userId) {

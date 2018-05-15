@@ -24,7 +24,7 @@ public class UserMsgService {
 	}
 
 	/**
-	 * 获取未读消息，key-发送者ID
+	 * 获取未读消息，读后删除，key-发送者ID
 	 * 
 	 * @param userId
 	 * @return
@@ -43,7 +43,13 @@ public class UserMsgService {
 				msgMap.put(m.getSendUserId(), ulist);
 			}
 			ulist.add(m);
+			// 读后删除
+			baseDao.delete(m);
 		}
 		return msgMap;
+	}
+
+	public void deleteMsg(UserMsg msg) {
+		baseDao.delete(msg);
 	}
 }

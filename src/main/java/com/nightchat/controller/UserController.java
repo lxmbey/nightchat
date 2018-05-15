@@ -123,10 +123,14 @@ public class UserController {
 					DigestUtils.md5DigestAsHex(registReq.password.getBytes()), "");
 			user.setRegistIp(StringUtils.getIpAddr());
 			user.setDeviceId(getHeadParam("device_id"));
-			if (!StringUtils.isEmpty(registReq.longitude)) {
+			String deviceType = getHeadParam("device_type");
+			if (StringUtils.isNotEmpty(deviceType)) {
+				user.setDeviceType(StringUtils.parseInt(deviceType));
+			}
+			if (StringUtils.isNotEmpty(registReq.longitude)) {
 				user.setLongitude(StringUtils.parseDouble(registReq.longitude));
 			}
-			if (!StringUtils.isEmpty(registReq.latitude)) {
+			if (StringUtils.isNotEmpty(registReq.latitude)) {
 				user.setLatitude(StringUtils.parseDouble(registReq.latitude));
 			}
 			userService.add(user);
@@ -160,6 +164,20 @@ public class UserController {
 			resp.msg = "用户名或密码错误";
 		}
 		return resp;
+	}
+
+	@ApiOperation(value = "退出登录")
+	@RequestMapping(value = "logout", method = RequestMethod.POST)
+	public BaseResp logout() {
+		String userId = getCurrentUserId();
+		String sessionKey = redisTemplate.opsForValue().get(Const.REDIS_USER_KEY + userId);
+		redisTemplate.delete(Const.REDIS_SESSION_KEY + sessionKey);
+		redisTemplate.delete(Const.REDIS_USER_KEY + userId);
+		Channel channel = Const.onlineUser.get(userId);
+		if (channel != null) {
+			channel.close();
+		}
+		return BaseResp.SUCCESS;
 	}
 
 	@ApiOperation(value = "获取用户信息", notes = "")
@@ -196,7 +214,7 @@ public class UserController {
 			UnreadMsgData data = new UnreadMsgData();
 			data.userInfo = UserInfoData.fromUser(userService.getById(entry.getKey()));
 			for (UserMsg m : entry.getValue()) {
-				data.msgData.add(new MsgData(m.getMsgType(), m.getMsgContent(), DateUtils.formatDate(DateUtils.DateDayTime, m.getSendDate())));
+				data.msgData.add(new MsgData(m.getId(), m.getMsgType(), m.getMsgContent(), DateUtils.formatDate(DateUtils.DateDayTime, m.getSendDate())));
 			}
 			resp.data.add(data);
 		}
@@ -347,6 +365,7 @@ public class UserController {
 		String roleArn = aliyunConfig.getRoleArn();
 		long durationSeconds = aliyunConfig.getTokenExpireTime();
 		String policy = StringUtils.readFileContent(aliyunConfig.getPolicyFile());
+		policy = policy.replace("${aliyun.bucket}", aliyunConfig.getBucket());
 		// RoleSessionName 是临时Token的会话名称，自己指定用于标识你的用户，主要用于审计，或者用于区分Token颁发给谁
 		// 但是注意RoleSessionName的长度和规则，不要有空格，只能有'-' '_' 字母和数字等字符
 		// 具体规则请参考API文档中的格式要求
@@ -483,6 +502,19 @@ public class UserController {
 			ChatController.agreeApply(channel, infoData);
 		}
 
+		return BaseResp.SUCCESS;
+	}
+
+	@ApiOperation(value = "删除好友")
+	@RequestMapping(value = "deleteFriend", method = RequestMethod.POST)
+	public BaseResp deleteFriend(@RequestBody ApplyFriendReq req) {
+		String friendId = req.friendId;
+		String userId = getCurrentUserId();
+		User friendUser = userService.getById(friendId);
+		if (friendUser == null) {
+			return BaseResp.fail("好友不存在");
+		}
+		userFriendService.deleteFriend(userId, friendId);
 		return BaseResp.SUCCESS;
 	}
 

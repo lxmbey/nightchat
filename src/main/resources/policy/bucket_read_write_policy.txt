@@ -4,13 +4,10 @@
       "Action": [
         "oss:GetObject",
         "oss:PutObject",
-        "oss:DeleteObject",
-        "oss:ListParts",
-        "oss:AbortMultipartUpload",
         "oss:ListObjects"
       ],
       "Effect": "Allow",
-      "Resource": ["acs:oss:*:*:*", "acs:oss:*:*:*"]
+      "Resource": ["acs:oss:*:*:${aliyun.bucket}/head/*", "acs:oss:*:*:${aliyun.bucket}/chat/*"]
     }
   ],
   "Version": "1"

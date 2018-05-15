@@ -11,6 +11,8 @@ public class AliyunConfig {
 	private String roleArn;
 	private long tokenExpireTime;
 	private String policyFile;
+	private String bucket;
+	private String url;
 
 	public String getAccessKeyID() {
 		return accessKeyID;
@@ -50,6 +52,22 @@ public class AliyunConfig {
 
 	public void setPolicyFile(String policyFile) {
 		this.policyFile = policyFile;
+	}
+
+	public String getBucket() {
+		return bucket;
+	}
+
+	public void setBucket(String bucket) {
+		this.bucket = bucket;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 }
