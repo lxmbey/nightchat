@@ -22,11 +22,11 @@ public class GlobalExceptionAdvice {
 	private static final Logger logger = LogManager.getLogger(GlobalExceptionAdvice.class);
 
 	@ExceptionHandler(value = Throwable.class)
-	public BaseResp errorHandler(Throwable e) {
+	public BaseResp<Void> errorHandler(Throwable e) {
 		if (e instanceof NotLoginException) {
-			return new BaseResp(StatusCode.SESSION_TIMEOUT.value, "未登录操作");
+			return new BaseResp<Void>(StatusCode.SESSION_TIMEOUT.value, "未登录操作");
 		}
 		logger.error(e.getMessage(), e);
-		return new BaseResp(StatusCode.ERROR.value, "系统异常：" + e.getMessage());
+		return new BaseResp<Void>(StatusCode.ERROR.value, "系统异常：" + e.getMessage());
 	}
 }
