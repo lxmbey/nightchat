@@ -51,23 +51,17 @@ import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.ChatMatchReq;
 import com.nightchat.view.FindPwdReq;
-import com.nightchat.view.FriendsResp;
 import com.nightchat.view.LoginReq;
-import com.nightchat.view.LoginResp;
 import com.nightchat.view.LoginRespData;
 import com.nightchat.view.MsgData;
 import com.nightchat.view.PngImgData;
-import com.nightchat.view.PngImgResp;
 import com.nightchat.view.RegistReq;
 import com.nightchat.view.SendSmsReq;
 import com.nightchat.view.UnreadMsgData;
-import com.nightchat.view.UnreadMsgResp;
 import com.nightchat.view.UpdatePwdReq;
 import com.nightchat.view.UpdateUserInfoReq;
 import com.nightchat.view.UploadTokenData;
-import com.nightchat.view.UploadTokenResp;
 import com.nightchat.view.UserInfoData;
-import com.nightchat.view.UserInfoResp;
 
 import io.netty.channel.Channel;
 import io.swagger.annotations.Api;
@@ -107,7 +101,7 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
 	@RequestMapping(value = "regist", method = RequestMethod.POST)
-	public BaseResp regist(@RequestBody RegistReq registReq) {
+	public BaseResp<Void> regist(@RequestBody RegistReq registReq) {
 		if (registReq.nickname == null || registReq.birthday == null || registReq.sex == null || registReq.password == null
 				|| (!registReq.sex.equals("男") && !registReq.sex.equals("女"))) {
 			return BaseResp.fail("输入参数错误");
@@ -143,11 +137,10 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "登录接口", notes = "phoneNum手机号,password密码")
 	@RequestMapping(value = "login", method = RequestMethod.POST)
-	public LoginResp login(@RequestBody LoginReq loginReq) {
-		LoginResp resp = new LoginResp();
+	public BaseResp<LoginRespData> login(@RequestBody LoginReq loginReq) {
+		BaseResp<LoginRespData> resp = new BaseResp<>();
 		User user = userService.getByPhone(loginReq.phoneNum);
 		if (user != null && loginReq.password != null && DigestUtils.md5DigestAsHex(loginReq.password.getBytes()).equals(user.getPassword())) {
-			resp.code = StatusCode.SUCCESS.value;
 			String sessionKey = StringUtils.randomUUID();
 
 			// TODO 考虑加事务
@@ -168,7 +161,7 @@ public class UserController {
 
 	@ApiOperation(value = "退出登录")
 	@RequestMapping(value = "logout", method = RequestMethod.POST)
-	public BaseResp logout() {
+	public BaseResp<Void> logout() {
 		String userId = getCurrentUserId();
 		String sessionKey = redisTemplate.opsForValue().get(Const.REDIS_USER_KEY + userId);
 		redisTemplate.delete(Const.REDIS_SESSION_KEY + sessionKey);
@@ -182,32 +175,29 @@ public class UserController {
 
 	@ApiOperation(value = "获取用户信息", notes = "")
 	@RequestMapping(value = "getUserInfo", method = RequestMethod.POST)
-	public UserInfoResp getUserInfo() {
-		UserInfoResp resp = new UserInfoResp();
+	public BaseResp<UserInfoData> getUserInfo() {
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		UserInfoData data = UserInfoData.fromUser(user);
-		resp.data = data;
-		return resp;
+		return BaseResp.success(data);
 	}
 
 	@ApiOperation(value = "获取好友列表")
 	@RequestMapping(value = "getFriends", method = RequestMethod.POST)
-	public FriendsResp getFriends() {
-		FriendsResp resp = new FriendsResp();
+	public BaseResp<List<UserInfoData>> getFriends() {
 		List<UserInfoData> datas = new ArrayList<>();
 		String userId = getCurrentUserId();
 		List<UserFriend> list = userFriendService.getFriends(userId);
 		for (UserFriend u : list) {
 			datas.add(UserInfoData.fromUser(u.getFriend()));
 		}
-		return resp;
+		return BaseResp.success(datas);
 	}
 
 	@ApiOperation(value = "获取未读消息")
 	@RequestMapping(value = "getUnreadMsg", method = RequestMethod.POST)
-	public UnreadMsgResp getUnreadMsg() {
-		UnreadMsgResp resp = new UnreadMsgResp();
+	public BaseResp<List<UnreadMsgData>> getUnreadMsg() {
+		List<UnreadMsgData> datas = new ArrayList<>();
 		String userId = getCurrentUserId();
 		Map<String, List<UserMsg>> map = userMsgService.getUnreadMsg(userId);
 		for (Entry<String, List<UserMsg>> entry : map.entrySet()) {
@@ -216,17 +206,17 @@ public class UserController {
 			for (UserMsg m : entry.getValue()) {
 				data.msgData.add(new MsgData(m.getId(), m.getMsgType(), m.getMsgContent(), DateUtils.formatDate(DateUtils.DateDayTime, m.getSendDate())));
 			}
-			resp.data.add(data);
+			datas.add(data);
 		}
-		return resp;
+		return BaseResp.success(datas);
 	}
 
 	@NotLogin
 	@ApiOperation(value = "获取图形验证码", notes = "返回base64编码后的PNG图片内容")
 	@RequestMapping(value = "getPngImg", method = RequestMethod.POST)
-	public PngImgResp getPngImg() {
+	public BaseResp<PngImgData> getPngImg() {
+		BaseResp<PngImgData> resp = new BaseResp<>();
 		String deviceId = getHeadParam("device_id");
-		PngImgResp resp = new PngImgResp();
 		if (StringUtils.isEmpty(deviceId)) {
 			resp.code = StatusCode.FAIL.value;
 			resp.msg = "设备ID不能为空";
@@ -245,7 +235,7 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "发短信接口", notes = "phoneNum手机号,imgCode图形验证码")
 	@RequestMapping(value = "sendSms", method = RequestMethod.POST)
-	public BaseResp sendSms(@RequestBody SendSmsReq sendSmsReq) {
+	public BaseResp<Void> sendSms(@RequestBody SendSmsReq sendSmsReq) {
 		String phoneNum = sendSmsReq.phoneNum;
 		String imgCode = sendSmsReq.imgCode;
 		String deviceId = getHeadParam("device_id");
@@ -290,7 +280,7 @@ public class UserController {
 
 	@ApiOperation(value = "修改基本资料", notes = "")
 	@RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
-	public BaseResp updateUserInfo(@RequestBody UpdateUserInfoReq req) {
+	public BaseResp<Void> updateUserInfo(@RequestBody UpdateUserInfoReq req) {
 		String nickname = req.nickname;
 		String birthday = req.birthday;
 		String headImg = req.headImg;
@@ -312,7 +302,7 @@ public class UserController {
 
 	@ApiOperation(value = "修改密码", notes = "")
 	@RequestMapping(value = "updatePwd", method = RequestMethod.POST)
-	public BaseResp updatePwd(@RequestBody UpdatePwdReq req) {
+	public BaseResp<Void> updatePwd(@RequestBody UpdatePwdReq req) {
 		String oldPwd = req.oldPwd;
 		String newPwd = req.newPwd;
 		if (StringUtils.isEmpty(oldPwd) || StringUtils.isEmpty(newPwd)) {
@@ -333,7 +323,7 @@ public class UserController {
 	@NotLogin
 	@ApiOperation(value = "找回密码", notes = "")
 	@RequestMapping(value = "findPwd", method = RequestMethod.POST)
-	public BaseResp findPwd(@RequestBody FindPwdReq req) {
+	public BaseResp<Void> findPwd(@RequestBody FindPwdReq req) {
 		String phoneNum = req.phoneNum;
 		String smsCode = req.smsCode;
 		String newPwd = req.newPwd;
@@ -356,8 +346,8 @@ public class UserController {
 
 	@ApiOperation(value = "获取图片上传Token")
 	@RequestMapping(value = "getUploadToken", method = RequestMethod.POST)
-	public UploadTokenResp getUploadToken() {
-		UploadTokenResp resp = new UploadTokenResp();
+	public BaseResp<UploadTokenData> getUploadToken() {
+		BaseResp<UploadTokenData> resp = new BaseResp<>();
 
 		String accessKeyId = aliyunConfig.getAccessKeyID();
 		String accessKeySecret = aliyunConfig.getAccessKeySecret();
@@ -417,8 +407,8 @@ public class UserController {
 
 	@ApiOperation(value = "聊天匹配")
 	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
-	public UserInfoResp chatMatch(@RequestBody ChatMatchReq req) {
-		UserInfoResp resp = new UserInfoResp();
+	public BaseResp<UserInfoData> chatMatch(@RequestBody ChatMatchReq req) {
+		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		int count = 0;
@@ -452,7 +442,7 @@ public class UserController {
 
 	@ApiOperation(value = "申请添加好友")
 	@RequestMapping(value = "applyFriend", method = RequestMethod.POST)
-	public BaseResp applyFriend(@RequestBody ApplyFriendReq req) {
+	public BaseResp<Void> applyFriend(@RequestBody ApplyFriendReq req) {
 		String friendId = req.friendId;
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(friendId);
@@ -480,7 +470,7 @@ public class UserController {
 
 	@ApiOperation(value = "同意好友申请", notes = "applyUserId-发起申请者ID")
 	@RequestMapping(value = "agreeApply", method = RequestMethod.POST)
-	public BaseResp agreeApply(@RequestBody AgreeApplyReq req) {
+	public BaseResp<Void> agreeApply(@RequestBody AgreeApplyReq req) {
 		String applyUserId = req.applyUserId;
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(applyUserId);
@@ -507,7 +497,7 @@ public class UserController {
 
 	@ApiOperation(value = "删除好友")
 	@RequestMapping(value = "deleteFriend", method = RequestMethod.POST)
-	public BaseResp deleteFriend(@RequestBody ApplyFriendReq req) {
+	public BaseResp<Void> deleteFriend(@RequestBody ApplyFriendReq req) {
 		String friendId = req.friendId;
 		String userId = getCurrentUserId();
 		User friendUser = userService.getById(friendId);
