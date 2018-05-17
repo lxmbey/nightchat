@@ -10,6 +10,8 @@ public class DBConfig {
 	private String driver;
 	private String user;
 	private String password;
+	private boolean showSql;
+	private String hbm2ddlAuto;
 
 	public String getUrl() {
 		return url;
@@ -41,6 +43,22 @@ public class DBConfig {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public boolean isShowSql() {
+		return showSql;
+	}
+
+	public void setShowSql(boolean showSql) {
+		this.showSql = showSql;
+	}
+
+	public String getHbm2ddlAuto() {
+		return hbm2ddlAuto;
+	}
+
+	public void setHbm2ddlAuto(String hbm2ddlAuto) {
+		this.hbm2ddlAuto = hbm2ddlAuto;
 	}
 
 }

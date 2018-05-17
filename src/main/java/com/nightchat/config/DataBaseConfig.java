@@ -46,8 +46,8 @@ public class DataBaseConfig {
 		sessionFactoryBean.setPackagesToScan("com.nightchat.entity");
 		Properties hibernateProperties = new Properties();
 		hibernateProperties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5InnoDBDialect");
-		hibernateProperties.put("hibernate.show_sql", true);
-		hibernateProperties.put("hibernate.hbm2ddl.auto", "update");
+		hibernateProperties.put("hibernate.show_sql", config.isShowSql());
+		hibernateProperties.put("hibernate.hbm2ddl.auto", config.getHbm2ddlAuto());
 		sessionFactoryBean.setHibernateProperties(hibernateProperties);
 		return sessionFactoryBean;
 	}
