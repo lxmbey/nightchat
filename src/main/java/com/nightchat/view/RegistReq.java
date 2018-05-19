@@ -14,7 +14,7 @@ public class RegistReq {
 	public String smsCode;
 
 	@ApiModelProperty("经度")
-	public String longitude;
+	public double longitude;
 	@ApiModelProperty("纬度")
-	public String latitude;
+	public double latitude;
 }

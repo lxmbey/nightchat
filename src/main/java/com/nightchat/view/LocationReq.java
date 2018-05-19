@@ -2,9 +2,9 @@ package com.nightchat.view;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class ChatMatchReq {
+public class LocationReq {
 	@ApiModelProperty("经度")
-	public String longitude;
+	public double longitude;
 	@ApiModelProperty("纬度")
-	public String latitude;
+	public double latitude;
 }

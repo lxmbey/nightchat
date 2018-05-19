@@ -49,8 +49,8 @@ import com.nightchat.view.AgreeApplyReq;
 import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
-import com.nightchat.view.ChatMatchReq;
 import com.nightchat.view.FindPwdReq;
+import com.nightchat.view.LocationReq;
 import com.nightchat.view.LoginReq;
 import com.nightchat.view.LoginRespData;
 import com.nightchat.view.MsgData;
@@ -71,8 +71,6 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("user")
 @Api(tags = "user")
 public class UserController {
-
-	// private Logger log = LogManager.getLogger(getClass());
 
 	@Autowired
 	private UserService userService;
@@ -121,12 +119,8 @@ public class UserController {
 			if (StringUtils.isNotEmpty(deviceType)) {
 				user.setDeviceType(StringUtils.parseInt(deviceType));
 			}
-			if (StringUtils.isNotEmpty(registReq.longitude)) {
-				user.setLongitude(StringUtils.parseDouble(registReq.longitude));
-			}
-			if (StringUtils.isNotEmpty(registReq.latitude)) {
-				user.setLatitude(StringUtils.parseDouble(registReq.latitude));
-			}
+			user.setLongitude(registReq.longitude);
+			user.setLatitude(registReq.latitude);
 			userService.add(user);
 			return BaseResp.SUCCESS;
 		} else {
@@ -157,6 +151,13 @@ public class UserController {
 			resp.msg = "用户名或密码错误";
 		}
 		return resp;
+	}
+
+	@ApiOperation(value = "上传地理位置")
+	@RequestMapping(value = "location", method = RequestMethod.POST)
+	public BaseResp<Void> location(@RequestBody LocationReq req) {
+		// TODO
+		return BaseResp.SUCCESS;
 	}
 
 	@ApiOperation(value = "退出登录")
@@ -407,7 +408,7 @@ public class UserController {
 
 	@ApiOperation(value = "聊天匹配")
 	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
-	public BaseResp<UserInfoData> chatMatch(@RequestBody ChatMatchReq req) {
+	public BaseResp<UserInfoData> chatMatch(@RequestBody LocationReq req) {
 		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
