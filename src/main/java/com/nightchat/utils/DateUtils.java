@@ -46,8 +46,10 @@ public class DateUtils {
 	/**
 	 * 计算两个日期之间相差的天数
 	 *
-	 * @param dateSmall 较小的时间
-	 * @param dateBig 较大的时间
+	 * @param dateSmall
+	 *            较小的时间
+	 * @param dateBig
+	 *            较大的时间
 	 * @return 相差天数
 	 * @throws ParseException
 	 */
@@ -77,7 +79,16 @@ public class DateUtils {
 	public static String currentDatetime() {
 		return formatDate(DateDayTime, new Date());
 	}
-	
+
+	/**
+	 * 当前年月日
+	 * 
+	 * @return
+	 */
+	public static String currentDate() {
+		return formatDate(DateDay, new Date());
+	}
+
 	/**
 	 * 获取当前时间至指定时的点间隔毫秒数 如果当前钟点大于指定钟点数，则结果是当前时间至第二天指定时的间隔毫秒数
 	 * 

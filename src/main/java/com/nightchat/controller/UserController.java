@@ -371,6 +371,10 @@ public class UserController {
 			final AssumeRoleResponse stsResponse = assumeRole(accessKeyId, accessKeySecret, roleArn, roleSessionName, policy, protocolType, durationSeconds);
 			UploadTokenData data = new UploadTokenData(stsResponse.getCredentials().getAccessKeyId(), stsResponse.getCredentials().getAccessKeySecret(),
 					stsResponse.getCredentials().getSecurityToken(), stsResponse.getCredentials().getExpiration());
+			String userId = getCurrentUserId();
+			data.headPath = "head/" + userId + ".png";
+			data.imgPath = MessageFormat.format("chat/{0}/img/{1}/", DateUtils.currentDate(), userId);
+			data.voicePath = MessageFormat.format("chat/{0}/voice/{1}/", DateUtils.currentDate(), userId);
 			resp.data = data;
 		} catch (ClientException e) {
 			resp.code = StatusCode.FAIL.value;
