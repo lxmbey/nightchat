@@ -285,7 +285,7 @@ public class UserController {
 		String nickname = req.nickname;
 		String birthday = req.birthday;
 		String headImg = req.headImg;
-		if (StringUtils.isEmpty(nickname) || StringUtils.isEmpty(birthday) || StringUtils.isEmpty(headImg)) {
+		if (StringUtils.isEmpty(nickname) || StringUtils.isEmpty(birthday)) {
 			return BaseResp.fail("输入参数错误");
 		}
 
