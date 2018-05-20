@@ -145,6 +145,7 @@ public class UserController {
 
 			LoginRespData data = new LoginRespData();
 			data.sessionKey = sessionKey;
+			data.userData = UserInfoData.fromUser(user);
 			resp.data = data;
 		} else {
 			resp.code = StatusCode.FAIL.value;
@@ -285,17 +286,20 @@ public class UserController {
 		String nickname = req.nickname;
 		String birthday = req.birthday;
 		String headImg = req.headImg;
-		if (StringUtils.isEmpty(nickname) || StringUtils.isEmpty(birthday)) {
-			return BaseResp.fail("输入参数错误");
-		}
 
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 		String sessionKey = request.getHeader(Const.SESSION_KEY);
 		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 		User user = userService.getById(userId);
-		user.setBirthday(DateUtils.parseDate(DateUtils.YearMonthDay, birthday));
-		user.setNickname(nickname);
-		user.setHeadImgUrl(headImg);
+		if (StringUtils.isNotEmpty(birthday)) {
+			user.setBirthday(DateUtils.parseDate(DateUtils.YearMonthDay, birthday));
+		}
+		if (StringUtils.isNotEmpty(nickname)) {
+			user.setNickname(nickname);
+		}
+		if (StringUtils.isNotEmpty(headImg)) {
+			user.setHeadImgUrl(headImg);
+		}
 		userService.update(user);
 
 		return BaseResp.SUCCESS;
