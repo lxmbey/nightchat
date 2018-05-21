@@ -96,6 +96,10 @@ public class UserController {
 	@Value("${sms.daycount}")
 	private int smsDayCount;
 
+	// token有效期天数
+	@Value("${chat.tokenDay}")
+	private int tokenDay;
+
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
 	@RequestMapping(value = "regist", method = RequestMethod.POST)
@@ -140,8 +144,8 @@ public class UserController {
 			// TODO 考虑加事务
 			String oldSessionKey = redisTemplate.opsForValue().get(Const.REDIS_USER_KEY + user.getId());
 			redisTemplate.delete(Const.REDIS_SESSION_KEY + oldSessionKey);
-			redisTemplate.opsForValue().set(Const.REDIS_USER_KEY + user.getId(), sessionKey);
-			redisTemplate.opsForValue().set(Const.REDIS_SESSION_KEY + sessionKey, user.getId(), 30, TimeUnit.MINUTES);
+			redisTemplate.opsForValue().set(Const.REDIS_USER_KEY + user.getId(), sessionKey, tokenDay, TimeUnit.DAYS);
+			redisTemplate.opsForValue().set(Const.REDIS_SESSION_KEY + sessionKey, user.getId(), tokenDay, TimeUnit.DAYS);
 
 			LoginRespData data = new LoginRespData();
 			data.sessionKey = sessionKey;
@@ -287,9 +291,7 @@ public class UserController {
 		String birthday = req.birthday;
 		String headImg = req.headImg;
 
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		String sessionKey = request.getHeader(Const.SESSION_KEY);
-		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		if (StringUtils.isNotEmpty(birthday)) {
 			user.setBirthday(DateUtils.parseDate(DateUtils.YearMonthDay, birthday));
@@ -364,8 +366,7 @@ public class UserController {
 		// RoleSessionName 是临时Token的会话名称，自己指定用于标识你的用户，主要用于审计，或者用于区分Token颁发给谁
 		// 但是注意RoleSessionName的长度和规则，不要有空格，只能有'-' '_' 字母和数字等字符
 		// 具体规则请参考API文档中的格式要求
-		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		String sessionKey = request.getHeader(Const.SESSION_KEY);
+		String sessionKey = getHeadParam(Const.SESSION_KEY);
 		String roleSessionName = sessionKey;
 
 		// 此处必须为 HTTPS
@@ -524,8 +525,7 @@ public class UserController {
 	 */
 	private String getCurrentUserId() {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-		String sessionKey = request.getHeader(Const.SESSION_KEY);
-		String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
+		String userId = (String) request.getAttribute("userId");
 		return userId;
 	}
 

@@ -1,7 +1,6 @@
 package com.nightchat.config;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -58,7 +57,7 @@ public class AspectConfig {
 				String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 				if (userId != null) {
 					login = true;
-					redisTemplate.opsForValue().set(Const.REDIS_SESSION_KEY + sessionKey, userId, 30, TimeUnit.MINUTES);
+					request.setAttribute("userId", userId);
 				}
 			}
 			if (!login) {
