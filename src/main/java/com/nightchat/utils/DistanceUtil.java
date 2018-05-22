@@ -1,9 +1,5 @@
 package com.nightchat.utils;
 
-/**
- * 根据两个位置的经纬度，来计算两地的距离（单位为KM） 参数为double类型 long1 位置1经度 lat1 位置1纬度 long2 位置2经度
- * lat2 位置2纬度
- */
 public class DistanceUtil {
 
 	private static final double EARTH_RADIUS = 6378.137;
@@ -12,6 +8,10 @@ public class DistanceUtil {
 		return d * Math.PI / 180.0;
 	}
 
+	/**
+	 * 根据两个位置的经纬度，来计算两地的距离（单位为KM） 参数为double类型 long1 位置1经度 lat1 位置1纬度 long2 位置2经度
+	 * lat2 位置2纬度
+	 */
 	public static double getDistance(double long1, double lat1, double long2, double lat2) {
 		double a, b, d, sa2, sb2;
 		lat1 = rad(lat1);

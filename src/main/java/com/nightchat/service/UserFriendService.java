@@ -61,7 +61,7 @@ public class UserFriendService {
 
 	public void deleteFriend(String userId, String friendId) {
 		String hql = "delete from user_friend where (userId =:userId and friend.id = :friendId) or (userId =:friendId and friend.id = :userId)";
-		Query<UserFriend> query = baseDao.getSession().createQuery(hql, UserFriend.class);
+		Query<?> query = baseDao.getSession().createQuery(hql);
 		query.setParameter("userId", userId);
 		query.setParameter("friendId", friendId);
 		query.executeUpdate();

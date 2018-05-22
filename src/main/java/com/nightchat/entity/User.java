@@ -30,6 +30,12 @@ public class User extends BaseEntity {
 	// 纬度
 	private double latitude;
 
+	// 注册时间
+	@Column(updatable = false)
+	private Date createDate = new Date();
+	// 最近登录时间
+	private Date loginDate = new Date();
+
 	public User() {
 
 	}
@@ -130,6 +136,22 @@ public class User extends BaseEntity {
 
 	public void setDeviceType(int deviceType) {
 		this.deviceType = deviceType;
+	}
+
+	public Date getCreateDate() {
+		return createDate;
+	}
+
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+
+	public Date getLoginDate() {
+		return loginDate;
+	}
+
+	public void setLoginDate(Date loginDate) {
+		this.loginDate = loginDate;
 	}
 
 }

@@ -2,6 +2,7 @@ package com.nightchat.controller;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.alibaba.fastjson.JSON;
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.http.MethodType;
@@ -34,14 +36,17 @@ import com.nightchat.common.NotLogin;
 import com.nightchat.config.AliyunConfig;
 import com.nightchat.config.SmsSender;
 import com.nightchat.entity.ApplyLog;
+import com.nightchat.entity.ChatMatchLog;
 import com.nightchat.entity.User;
 import com.nightchat.entity.UserFriend;
 import com.nightchat.entity.UserMsg;
 import com.nightchat.service.ApplyLogService;
+import com.nightchat.service.ChatMatchLogService;
 import com.nightchat.service.UserFriendService;
 import com.nightchat.service.UserMsgService;
 import com.nightchat.service.UserService;
 import com.nightchat.utils.DateUtils;
+import com.nightchat.utils.DistanceUtil;
 import com.nightchat.utils.PngUtil;
 import com.nightchat.utils.PushUtil;
 import com.nightchat.utils.StringUtils;
@@ -49,6 +54,7 @@ import com.nightchat.view.AgreeApplyReq;
 import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
+import com.nightchat.view.ChatInfoBean;
 import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.LocationReq;
 import com.nightchat.view.LoginReq;
@@ -99,6 +105,9 @@ public class UserController {
 	// token有效期天数
 	@Value("${chat.tokenDay}")
 	private int tokenDay;
+
+	@Autowired
+	private ChatMatchLogService matchLogService;
 
 	@NotLogin
 	@ApiOperation(value = "注册接口", notes = "")
@@ -151,6 +160,9 @@ public class UserController {
 			data.sessionKey = sessionKey;
 			data.userData = UserInfoData.fromUser(user);
 			resp.data = data;
+
+			user.setLoginDate(new Date());
+			userService.update(user);
 		} else {
 			resp.code = StatusCode.FAIL.value;
 			resp.msg = "用户名或密码错误";
@@ -421,32 +433,88 @@ public class UserController {
 		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
-		int count = 0;
-		UserInfoData info = null;
-		while (Const.onlineChannel.size() > 1 && count < Const.onlineChannel.size()) {
-			count++;
-			UserInfoData[] onlineUser = Const.onlineChannel.values().toArray(new UserInfoData[0]);
-			info = onlineUser[StringUtils.randomInt(onlineUser.length)];
-			if (info.id.equals(userId)) {
-				info = null;
+
+		ChatInfoBean chatInfoBean = null;
+		String chatInfoStr = (String) redisTemplate.opsForHash().get(Const.CHAT_INFO_KEY, userId);
+		if (chatInfoStr == null) {
+			chatInfoBean = new ChatInfoBean();
+			chatInfoBean.userInfo = UserInfoData.fromUser(user);
+		} else {
+			chatInfoBean = JSON.parseObject(chatInfoStr, ChatInfoBean.class);
+		}
+		chatInfoBean.locationReq = req;
+		chatInfoBean.updateDate = new Date();
+		redisTemplate.opsForHash().put(Const.CHAT_INFO_KEY, userId, JSON.toJSONString(chatInfoBean));
+
+		List<UserFriend> friendList = userFriendService.getFriends(userId);
+		List<ChatMatchLog> matchLogList = matchLogService.findLog(userId);
+
+		UserInfoData matchUserInfo = null;
+		List<ChatInfoBean> chatInfoList = new ArrayList<>();
+		List<Object> str = redisTemplate.opsForHash().values(Const.CHAT_INFO_KEY);
+		for (Object o : str) {
+			ChatInfoBean t = JSON.parseObject(o.toString(), ChatInfoBean.class);
+			if (t.userInfo.sex.equals(user.getSex())) {
 				continue;
 			}
+			boolean exist = false;
+			// 是好友
+			for (UserFriend f : friendList) {
+				if (f.getFriend().getId().equals(t.userInfo.id)) {
+					exist = true;
+					break;
+				}
+			}
+			// 曾经匹配过
+			for (ChatMatchLog m : matchLogList) {
+				if (m.getOtherUserId().equals(t.userInfo.id)) {
+					//					exist = true;
+					//					break;
+				}
+			}
+			if (exist) {
+				continue;
+			}
+			chatInfoList.add(t);
 		}
-		if (info == null) {
-			List<User> users = userService.searchUser(20, userId);
-			if (!users.isEmpty()) {
-				User u = users.get(StringUtils.randomInt(users.size()));
-				info = new UserInfoData(u.getId(), u.getPhoneNum(), u.getNickname(), u.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, u.getBirthday()), u.getHeadImgUrl());
+		Collections.sort(chatInfoList, (c1, c2) -> {
+			return (int) (c2.updateDate.getTime() - c1.updateDate.getTime());
+		});
+
+		int count = 1;
+		int km = 10;
+		ok: while (true) {
+			for (ChatInfoBean c : chatInfoList) {
+				if (DistanceUtil.getDistance(req.longitude, req.latitude, c.locationReq.longitude, c.locationReq.latitude) <= count * km) {
+					matchUserInfo = c.userInfo;
+					break ok;
+				}
+			}
+			if (count <= 10) {
+				km += 10;
+			} else {
+				km += 100;
+			}
+			if (km >= 3500) {
+				break;
 			}
 		}
-		if (info == null) {
+
+		if (matchUserInfo == null) {
+			List<User> users = userService.searchUser(100, user);
+			if (!users.isEmpty()) {
+				User u = users.get(StringUtils.randomInt(users.size()));
+				matchUserInfo = UserInfoData.fromUser(u);
+			}
+		}
+		if (matchUserInfo == null) {
 			resp.code = StatusCode.FAIL.value;
 			resp.msg = "未匹配到合适用户";
+			return resp;
 		}
-
-		UserInfoData data = new UserInfoData(user.getId(), user.getPhoneNum(), user.getNickname(), user.getSex(), DateUtils.formatDate(DateUtils.YearMonthDay, user.getBirthday()),
-				user.getHeadImgUrl());
-		resp.data = data;
+		resp.data = matchUserInfo;
+		// 保存匹配记录
+		matchLogService.add(new ChatMatchLog(StringUtils.randomUUID(), new Date(), userId, matchUserInfo.id));
 		return resp;
 	}
 
@@ -462,7 +530,7 @@ public class UserController {
 		if (userFriendService.isExist(userId, friendId)) {
 			return BaseResp.fail("对方和你已经是好友关系");
 		}
-		UserInfoData infoData = Const.onlineChannel.get(Const.onlineUser.get(userId));
+		User user = userService.getById(userId);
 		ApplyLog applyLog = applyLogService.findLog(userId, friendId);
 		if (applyLog == null) {
 			applyLog = new ApplyLog(StringUtils.randomUUID(), userId, friendId, new Date());
@@ -470,9 +538,9 @@ public class UserController {
 		}
 		Channel channel = Const.onlineUser.get(friendId);
 		if (channel == null) {
-			PushUtil.sendPushWithCallback(friendId, MessageFormat.format("{0}申请添加你为好友", infoData.nickname));
+			PushUtil.sendPushWithCallback(friendId, MessageFormat.format("{0}申请添加你为好友", user.getNickname()));
 		} else {
-			ChatController.applyFriend(channel, infoData);
+			ChatController.applyFriend(channel, UserInfoData.fromUser(user));
 		}
 
 		return BaseResp.SUCCESS;
@@ -490,7 +558,6 @@ public class UserController {
 		if (userFriendService.isExist(userId, applyUserId)) {
 			return BaseResp.fail("对方和你已经是好友关系");
 		}
-		UserInfoData infoData = Const.onlineChannel.get(Const.onlineUser.get(userId));
 		ApplyLog applyLog = applyLogService.findLog(applyUserId, userId);
 		if (applyLog == null) {
 			return BaseResp.fail("未找到申请记录");
@@ -499,7 +566,7 @@ public class UserController {
 		userFriendService.addFriend(friendUser, user, applyLog);
 		Channel channel = Const.onlineUser.get(applyUserId);
 		if (channel != null) {
-			ChatController.agreeApply(channel, infoData);
+			ChatController.agreeApply(channel, UserInfoData.fromUser(user));
 		}
 
 		return BaseResp.SUCCESS;

@@ -42,6 +42,11 @@ public class Const {
 	public static String REDIS_APPLY_FRIEND_KEY = "redis_apply_friend_key:";
 
 	/**
+	 * 聊天信息key
+	 */
+	public static String CHAT_INFO_KEY = "chat_info_key";
+
+	/**
 	 * key-Channel,value-UserInfoData
 	 */
 	public static ConcurrentHashMap<Channel, UserInfoData> onlineChannel = new ConcurrentHashMap<>();
