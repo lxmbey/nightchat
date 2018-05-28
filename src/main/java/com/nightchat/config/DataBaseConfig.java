@@ -32,6 +32,7 @@ public class DataBaseConfig {
 			dataSource.setMinPoolSize(5);
 			dataSource.setMaxPoolSize(50);
 			dataSource.setMaxIdleTime(5000);
+			dataSource.setCheckoutTimeout(20000);
 		} catch (PropertyVetoException e) {
 			e.printStackTrace();
 			return null;
