@@ -19,8 +19,6 @@ public class BaseResp<Data> {
 
 	public static BaseResp<Void> SUCCESS = new BaseResp<>();
 
-	public static BaseResp<Object> PUSH_DATA = new BaseResp<>(1254);
-
 	public BaseResp() {
 
 	}
