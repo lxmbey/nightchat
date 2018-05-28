@@ -9,11 +9,13 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.alibaba.fastjson.JSON;
 import com.nightchat.common.Const;
 import com.nightchat.common.Functions;
 import com.nightchat.common.Functions.MethodWrapper;
 import com.nightchat.common.NotLogin;
 import com.nightchat.common.Packet;
+import com.nightchat.utils.LogUtil;
 import com.nightchat.view.UserInfoData;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -59,6 +61,7 @@ public class NettyBootstrap {
 						Request request = new Request();
 						request.packet = (Packet) msg;
 						request.channel = ctx.channel();
+						LogUtil.logger.info("Socket收到："+JSON.toJSONString(request.packet));
 						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
 							log.warn("不存在的协议" + request.packet.name);
