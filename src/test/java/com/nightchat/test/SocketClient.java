@@ -3,7 +3,6 @@ package com.nightchat.test;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 public class SocketClient {
@@ -20,9 +19,7 @@ public class SocketClient {
 					while (true) {
 						try {
 							byte[] bs = "{'name':'chat/heart','data':''}".getBytes("UTF-8");
-							ByteBuffer header = ByteBuffer.allocate(4);
-							header.putInt(bs.length);
-							os.write(header.array());
+							os.write(intToByteArray(bs.length));
 							os.write(bs);
 							os.flush();
 							TimeUnit.SECONDS.sleep(5);
@@ -55,8 +52,14 @@ public class SocketClient {
 		}
 	}
 
+	// byte数组转int
 	public static int byteArrayToInt(byte[] b) {
 		return b[3] & 0xFF | (b[2] & 0xFF) << 8 | (b[1] & 0xFF) << 16 | (b[0] & 0xFF) << 24;
+	}
+
+	// int转byte数组
+	public static byte[] intToByteArray(int a) {
+		return new byte[] { (byte) ((a >> 24) & 0xFF), (byte) ((a >> 16) & 0xFF), (byte) ((a >> 8) & 0xFF), (byte) (a & 0xFF) };
 	}
 
 	public static void onMsg(String msg) {
