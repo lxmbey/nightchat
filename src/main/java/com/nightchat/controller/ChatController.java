@@ -18,12 +18,12 @@ import com.nightchat.entity.UserMsg;
 import com.nightchat.net.Request;
 import com.nightchat.service.UserMsgService;
 import com.nightchat.service.UserService;
-import com.nightchat.utils.DateUtils;
 import com.nightchat.utils.PushUtil;
 import com.nightchat.utils.StringUtils;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.ChatMsgResp;
 import com.nightchat.view.ChatReq;
+import com.nightchat.view.MsgData;
 import com.nightchat.view.UserInfoData;
 
 import io.netty.channel.Channel;
@@ -43,11 +43,13 @@ public class ChatController {
 	// 发送聊天消息
 	public String sendMsg(Request request) {
 		ChatReq chatReq = JSON.parseObject(request.packet.data, ChatReq.class);
-		ChatMsgResp chatMsgResp = new ChatMsgResp(chatReq.msgType, chatReq.content, DateUtils.currentDatetime());
+		ChatMsgResp chatMsgResp = new ChatMsgResp();
 		chatMsgResp.userInfo = Const.onlineChannel.get(request.channel);
 		Channel channel = Const.onlineUser.get(chatReq.receiverId);
 		UserInfoData sendUser = Const.onlineChannel.get(request.channel);
 		UserMsg userMsg = new UserMsg(StringUtils.randomUUID(), chatReq.receiverId, sendUser.id, 0, new Date(), chatReq.msgType, chatReq.content);
+		MsgData msgData = new MsgData(userMsg.getId(), chatReq.msgType, chatReq.content, userMsg.getSendDate().getTime());
+		chatMsgResp.msgData = msgData;
 		if (channel == null) {// 不在线
 			User receiverUser = userService.getById(chatReq.receiverId);
 			if (receiverUser != null) {
@@ -61,8 +63,8 @@ public class ChatController {
 				PushUtil.sendPushWithCallback(receiverUser.getId(), alert);
 			}
 		} else {
-			//			userMsg.setStatus(1);// 已读
-			//			userMsgService.add(userMsg);
+			// userMsg.setStatus(1);// 已读
+			// userMsgService.add(userMsg);
 			receiveMsg(channel, chatMsgResp);
 		}
 		return JSON.toJSONString(BaseResp.SUCCESS);

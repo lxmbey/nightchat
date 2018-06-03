@@ -35,10 +35,10 @@ public class UserService {
 		baseDao.getSession().update(user);
 	}
 
-	public List<User> searchUser(int size, User user) {
-		Query<User> query = baseDao.getSession().createQuery("from user where id !=:selfId and sex != :selfSex order by loginDate desc", User.class).setMaxResults(size);
+	public List<User> searchUser(int size, User user, String sex) {
+		Query<User> query = baseDao.getSession().createQuery("from user where id !=:selfId and sex =:sex order by loginDate desc", User.class).setMaxResults(size);
 		query.setParameter("selfId", user.getId());
-		query.setParameter("selfSex", user.getSex());
+		query.setParameter("sex", sex);
 		return query.list();
 	}
 }

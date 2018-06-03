@@ -7,13 +7,13 @@ public class MsgData {
 	@ApiModelProperty("0-文本1-语音2-图片")
 	public int msgType;
 	public String content;
-	public String sendTime;
+	public long sendTime;
 
 	public MsgData() {
 
 	}
 
-	public MsgData(String id, int msgType, String content, String sendTime) {
+	public MsgData(String id, int msgType, String content, long sendTime) {
 		super();
 		this.id = id;
 		this.msgType = msgType;

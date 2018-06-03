@@ -55,6 +55,7 @@ import com.nightchat.view.ApplyFriendReq;
 import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.ChatInfoBean;
+import com.nightchat.view.ChatMatchReq;
 import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.LocationReq;
 import com.nightchat.view.LoginReq;
@@ -222,7 +223,7 @@ public class UserController {
 			UnreadMsgData data = new UnreadMsgData();
 			data.userInfo = UserInfoData.fromUser(userService.getById(entry.getKey()));
 			for (UserMsg m : entry.getValue()) {
-				data.msgData.add(new MsgData(m.getId(), m.getMsgType(), m.getMsgContent(), DateUtils.formatDate(DateUtils.DateDayTime, m.getSendDate())));
+				data.msgData.add(new MsgData(m.getId(), m.getMsgType(), m.getMsgContent(), m.getSendDate().getTime()));
 			}
 			datas.add(data);
 		}
@@ -429,7 +430,7 @@ public class UserController {
 
 	@ApiOperation(value = "聊天匹配")
 	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
-	public BaseResp<UserInfoData> chatMatch(@RequestBody LocationReq req) {
+	public BaseResp<UserInfoData> chatMatch(@RequestBody ChatMatchReq req) {
 		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
@@ -454,7 +455,7 @@ public class UserController {
 		List<Object> str = redisTemplate.opsForHash().values(Const.CHAT_INFO_KEY);
 		for (Object o : str) {
 			ChatInfoBean t = JSON.parseObject(o.toString(), ChatInfoBean.class);
-			if (t.userInfo.sex.equals(user.getSex())) {
+			if (!t.userInfo.sex.equals(req.sex)) {
 				continue;
 			}
 			boolean exist = false;
@@ -468,8 +469,8 @@ public class UserController {
 			// 曾经匹配过
 			for (ChatMatchLog m : matchLogList) {
 				if (m.getOtherUserId().equals(t.userInfo.id)) {
-					//					exist = true;
-					//					break;
+					// exist = true;
+					// break;
 				}
 			}
 			if (exist) {
@@ -501,7 +502,7 @@ public class UserController {
 		}
 
 		if (matchUserInfo == null) {
-			List<User> users = userService.searchUser(100, user);
+			List<User> users = userService.searchUser(100, user, req.sex);
 			if (!users.isEmpty()) {
 				User u = users.get(StringUtils.randomInt(users.size()));
 				matchUserInfo = UserInfoData.fromUser(u);

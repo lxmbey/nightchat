@@ -16,6 +16,7 @@ import com.nightchat.common.Functions.MethodWrapper;
 import com.nightchat.common.NotLogin;
 import com.nightchat.common.Packet;
 import com.nightchat.utils.LogUtil;
+import com.nightchat.view.BaseResp;
 import com.nightchat.view.UserInfoData;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -61,7 +62,7 @@ public class NettyBootstrap {
 						Request request = new Request();
 						request.packet = (Packet) msg;
 						request.channel = ctx.channel();
-						LogUtil.logger.info("Socket收到："+JSON.toJSONString(request.packet));
+						LogUtil.logger.info("Socket收到：" + JSON.toJSONString(request.packet));
 						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
 							log.warn("不存在的协议" + request.packet.name);
@@ -73,12 +74,18 @@ public class NettyBootstrap {
 							ctx.channel().close();
 							return;
 						}
-						Object message = method.method.invoke(method.instance, request);
-						if (message != null) {
-							Packet packet = new Packet();
-							packet.name = request.packet.name;
-							packet.data = message.toString();
-							ctx.channel().writeAndFlush(packet);
+						Packet response = new Packet();
+						response.name = request.packet.name;
+						try {
+							Object message = method.method.invoke(method.instance, request);
+							if (message != null) {
+								response.data = message.toString();
+								ctx.channel().writeAndFlush(response);
+							}
+						} catch (Exception e) {
+							LogUtil.logger.error(JSON.toJSONString(response), e);
+							response.data = JSON.toJSONString(BaseResp.fail("系统异常"));
+							ctx.channel().writeAndFlush(response);
 						}
 					}
 
