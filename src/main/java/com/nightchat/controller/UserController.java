@@ -404,7 +404,7 @@ public class UserController {
 		try {
 			final AssumeRoleResponse stsResponse = assumeRole(accessKeyId, accessKeySecret, roleArn, roleSessionName, policy, protocolType, durationSeconds);
 			UploadTokenData data = new UploadTokenData(stsResponse.getCredentials().getAccessKeyId(), stsResponse.getCredentials().getAccessKeySecret(),
-					stsResponse.getCredentials().getSecurityToken(), stsResponse.getCredentials().getExpiration());
+					stsResponse.getCredentials().getSecurityToken(), System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(durationSeconds - 5));
 			String userId = getCurrentUserId();
 			data.headPath = "head/" + userId + ".png";
 			data.imgPath = MessageFormat.format("chat/{0}/img/{1}/", DateUtils.currentDate(), userId);
