@@ -25,11 +25,11 @@ public class UserFriendService {
 	}
 
 	public boolean isExist(String userId, String friendId) {
-		String hql = "from user_friend where userId =:userId and friend.id = :friendId";
-		Query<UserFriend> query = baseDao.getSession().createQuery(hql, UserFriend.class);
+		String hql = "select count(id) from user_friend where userId =:userId and friend.id = :friendId";
+		Query<Long> query = baseDao.getSession().createQuery(hql, Long.class);
 		query.setParameter("userId", userId);
 		query.setParameter("friendId", friendId);
-		return !query.list().isEmpty();
+		return query.uniqueResult() > 0;
 	}
 
 	public void addFriend(User applyUser, User friendUser, ApplyLog applyLog) {

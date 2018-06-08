@@ -56,6 +56,7 @@ import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.ChatInfoBean;
 import com.nightchat.view.ChatMatchReq;
+import com.nightchat.view.CheckImgCodeReq;
 import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.LocationReq;
 import com.nightchat.view.LoginReq;
@@ -252,6 +253,21 @@ public class UserController {
 	}
 
 	@NotLogin
+	@ApiOperation(value = "检查验证码是否正确")
+	@RequestMapping(value = "checkImgCode", method = RequestMethod.POST)
+	public BaseResp<Void> checkImgCode(@RequestBody CheckImgCodeReq req) {
+		String deviceId = getHeadParam("device_id");
+		if (StringUtils.isEmpty(deviceId)) {
+			BaseResp.fail("设备ID不能为空");
+		}
+		String code = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + deviceId);
+		if (code == null || !code.equals(req.imgCode)) {
+			BaseResp.fail("图形验证码错误");
+		}
+		return BaseResp.SUCCESS;
+	}
+
+	@NotLogin
 	@ApiOperation(value = "发短信接口", notes = "phoneNum手机号,imgCode图形验证码")
 	@RequestMapping(value = "sendSms", method = RequestMethod.POST)
 	public BaseResp<Void> sendSms(@RequestBody SendSmsReq sendSmsReq) {
@@ -264,11 +280,11 @@ public class UserController {
 
 		String redisCode = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + deviceId);
 		if (redisCode == null || imgCode == null || !redisCode.equalsIgnoreCase(imgCode.toUpperCase())) {
-			return BaseResp.fail("验证码错误");
+			return BaseResp.fail("图形验证码错误");
 		}
 		String oldCode = redisTemplate.opsForValue().get(Const.REDIS_SMS_KEY + phoneNum);
 		if (oldCode != null) {
-			return BaseResp.SUCCESS;
+			return BaseResp.fail("已发送过短信验证码，有效期内可重复使用");
 		}
 		long delayTime = DateUtils.betweenTaskHourMillis(0, 0);// 发送记录清空倒计时
 		String num = redisTemplate.opsForValue().get(Const.REDIS_PHONE_SMS_COUNT_KEY + phoneNum);
