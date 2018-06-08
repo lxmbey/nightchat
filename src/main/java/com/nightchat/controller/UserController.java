@@ -253,16 +253,16 @@ public class UserController {
 	}
 
 	@NotLogin
-	@ApiOperation(value = "检查验证码是否正确")
+	@ApiOperation(value = "检查图形验证码是否正确")
 	@RequestMapping(value = "checkImgCode", method = RequestMethod.POST)
 	public BaseResp<Void> checkImgCode(@RequestBody CheckImgCodeReq req) {
 		String deviceId = getHeadParam("device_id");
 		if (StringUtils.isEmpty(deviceId)) {
-			BaseResp.fail("设备ID不能为空");
+			return BaseResp.fail("设备ID不能为空");
 		}
 		String code = redisTemplate.opsForValue().get(Const.REDIS_IMG_KEY + deviceId);
-		if (code == null || !code.equals(req.imgCode)) {
-			BaseResp.fail("图形验证码错误");
+		if (StringUtils.isEmpty(req.imgCode) || code == null || !code.equals(req.imgCode)) {
+			return BaseResp.fail("图形验证码错误");
 		}
 		return BaseResp.SUCCESS;
 	}
