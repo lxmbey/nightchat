@@ -241,7 +241,7 @@ public class UserController {
 			resp.msg = "设备ID不能为空";
 			return resp;
 		}
-		String code = StringUtils.generateRandomStr(4);
+		String code = StringUtils.generateSmsCode();
 		String imgStr = PngUtil.getRandCode(code);
 		redisTemplate.opsForValue().set(Const.REDIS_IMG_KEY + deviceId, code, 5, TimeUnit.MINUTES);
 

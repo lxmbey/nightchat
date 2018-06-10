@@ -34,7 +34,7 @@ public class StringUtils {
 	}
 
 	/**
-	 * 生成4位数验证码
+	 * 生成4位数字随机码
 	 * 
 	 * @return
 	 */
@@ -51,7 +51,7 @@ public class StringUtils {
 	public static String generateRandomStr(int length) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < length; i++) {
-			sb.append(randString.charAt(random.nextInt(length)));
+			sb.append(randString.charAt(random.nextInt(randString.length())));
 		}
 		return sb.toString();
 	}
