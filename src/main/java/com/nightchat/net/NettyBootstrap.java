@@ -38,7 +38,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 public class NettyBootstrap {
 	private Logger log = LogManager.getLogger(getClass());
 
-	@Value("${netty.port}")
+	@Value("${server.netty.port}")
 	private int port;
 
 	@PostConstruct

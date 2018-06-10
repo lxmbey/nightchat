@@ -3,6 +3,7 @@ package com.nightchat.utils;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,16 +32,16 @@ public class PngUtil {
 	/*
 	 * 获得颜色
 	 */
-	private static Color getRandColor(int fc, int bc) {
-		if (fc > 255)
-			fc = 255;
-		if (bc > 255)
-			bc = 255;
-		int r = fc + random.nextInt(bc - fc - 16);
-		int g = fc + random.nextInt(bc - fc - 14);
-		int b = fc + random.nextInt(bc - fc - 18);
-		return new Color(r, g, b);
-	}
+	//	private static Color getRandColor(int fc, int bc) {
+	//		if (fc > 255)
+	//			fc = 255;
+	//		if (bc > 255)
+	//			bc = 255;
+	//		int r = fc + random.nextInt(bc - fc - 16);
+	//		int g = fc + random.nextInt(bc - fc - 14);
+	//		int b = fc + random.nextInt(bc - fc - 18);
+	//		return new Color(r, g, b);
+	//	}
 
 	/**
 	 * 生成随机图片
@@ -48,10 +49,10 @@ public class PngUtil {
 	public static String getRandCode(String randomCode) {
 		//BufferedImage类是具有缓冲区的Image类,Image类是用于描述图像信息的类
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
-		Graphics g = image.getGraphics();//产生Image对象的Graphics对象,改对象可以在图像上进行各种绘制操作
-		g.fillRect(0, 0, width, height);
+		Graphics2D g = (Graphics2D) image.getGraphics();//产生Image对象的Graphics对象,改对象可以在图像上进行各种绘制操作
+		g.setBackground(new Color(25, 32, 40));//设置背景色
+		g.clearRect(0, 0, width, height);//通过使用当前绘图表面的背景色进行填充来清除指定的矩形。
 		g.setFont(new Font("Times New Roman", Font.ROMAN_BASELINE, 18));
-		g.setColor(getRandColor(110, 133));
 		//绘制干扰线
 		for (int i = 0; i <= lineSize; i++) {
 			drowLine(g);
@@ -75,7 +76,7 @@ public class PngUtil {
 	 */
 	private static void drowString(Graphics g, String str, int i) {
 		g.setFont(getFont());
-		g.setColor(new Color(random.nextInt(101), random.nextInt(111), random.nextInt(121)));
+		g.setColor(Color.WHITE);
 		g.translate(random.nextInt(3), random.nextInt(3));
 		g.drawString(str, 13 * i, 16);
 	}
@@ -84,6 +85,7 @@ public class PngUtil {
 	 * 绘制干扰线
 	 */
 	private static void drowLine(Graphics g) {
+		g.setColor(Color.WHITE);
 		int x = random.nextInt(width);
 		int y = random.nextInt(height);
 		int xl = random.nextInt(13);
@@ -104,4 +106,9 @@ public class PngUtil {
 		String imgStr = Base64.getEncoder().encodeToString(os.toByteArray());
 		return imgStr;
 	}
+
+	public static void main(String[] args) {
+		getRandCode("1234");
+	}
+
 }
