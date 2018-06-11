@@ -471,7 +471,7 @@ public class UserController {
 		List<Object> str = redisTemplate.opsForHash().values(Const.CHAT_INFO_KEY);
 		for (Object o : str) {
 			ChatInfoBean t = JSON.parseObject(o.toString(), ChatInfoBean.class);
-			if (!t.userInfo.sex.equals(req.sex)) {
+			if (!t.userInfo.sex.equals(req.sex) || userId.equals(t.userInfo.id)) {
 				continue;
 			}
 			boolean exist = false;
