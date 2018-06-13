@@ -42,9 +42,14 @@ public class Const {
 	public static String REDIS_APPLY_FRIEND_KEY = "redis_apply_friend_key:";
 
 	/**
-	 * 聊天信息key
+	 * 聊天匹配信息key
 	 */
 	public static String CHAT_INFO_KEY = "chat_info_key";
+
+	/**
+	 * 聊天匹配次数key
+	 */
+	public static String CHAT_MATHC_HASH_KEY = "chat_mathc_hash_key";
 
 	/**
 	 * key-Channel,value-UserInfoData

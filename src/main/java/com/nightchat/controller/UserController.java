@@ -36,11 +36,13 @@ import com.nightchat.common.NotLogin;
 import com.nightchat.config.AliyunConfig;
 import com.nightchat.config.SmsSender;
 import com.nightchat.entity.ApplyLog;
+import com.nightchat.entity.ChatConfig;
 import com.nightchat.entity.ChatMatchLog;
 import com.nightchat.entity.User;
 import com.nightchat.entity.UserFriend;
 import com.nightchat.entity.UserMsg;
 import com.nightchat.service.ApplyLogService;
+import com.nightchat.service.ChatConfigService;
 import com.nightchat.service.ChatMatchLogService;
 import com.nightchat.service.UserFriendService;
 import com.nightchat.service.UserMsgService;
@@ -107,6 +109,9 @@ public class UserController {
 	// token有效期天数
 	@Value("${chat.tokenDay}")
 	private int tokenDay;
+
+	@Autowired
+	private ChatConfigService chatConfigService;
 
 	@Autowired
 	private ChatMatchLogService matchLogService;
@@ -449,6 +454,12 @@ public class UserController {
 	public BaseResp<UserInfoData> chatMatch(@RequestBody ChatMatchReq req) {
 		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
+		int matchedNum = 0;// 已匹配次数
+		Object matchObj = redisTemplate.opsForHash().get(Const.CHAT_MATHC_HASH_KEY, userId);
+		if (matchObj != null) {
+			matchedNum = StringUtils.parseInt(matchObj.toString());
+		}
+		ChatConfig chatConfig = chatConfigService.getChatConfig();
 		User user = userService.getById(userId);
 
 		ChatInfoBean chatInfoBean = null;
@@ -530,6 +541,7 @@ public class UserController {
 			return resp;
 		}
 		resp.data = matchUserInfo;
+		redisTemplate.opsForHash().put(Const.CHAT_MATHC_HASH_KEY, userId, 1);
 		// 保存匹配记录
 		matchLogService.add(new ChatMatchLog(StringUtils.randomUUID(), new Date(), userId, matchUserInfo.id));
 		return resp;
