@@ -49,7 +49,7 @@ public class Const {
 	/**
 	 * 聊天匹配次数key
 	 */
-	public static String CHAT_MATHC_HASH_KEY = "chat_mathc_hash_key";
+	public static String CHAT_MATCH_HASH_KEY = "chat_match_hash_key";
 
 	/**
 	 * key-Channel,value-UserInfoData

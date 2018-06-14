@@ -13,8 +13,9 @@ public class ChatConfig extends BaseEntity {
 
 	}
 
-	public ChatConfig(int matchNum, int beginHour, int endHour) {
+	public ChatConfig(String id, int matchNum, int beginHour, int endHour) {
 		super();
+		this.id = id;
 		this.matchNum = matchNum;
 		this.beginHour = beginHour;
 		this.endHour = endHour;

@@ -2,6 +2,7 @@ package com.nightchat.controller;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -58,6 +59,7 @@ import com.nightchat.view.BaseResp;
 import com.nightchat.view.BaseResp.StatusCode;
 import com.nightchat.view.ChatInfoBean;
 import com.nightchat.view.ChatMatchReq;
+import com.nightchat.view.ChatStatusData;
 import com.nightchat.view.CheckImgCodeReq;
 import com.nightchat.view.FindPwdReq;
 import com.nightchat.view.LocationReq;
@@ -449,17 +451,52 @@ public class UserController {
 		}
 	}
 
+	@ApiOperation(value = "查询聊天匹配次数和开放时间")
+	@RequestMapping(value = "getChatStatus", method = RequestMethod.POST)
+	public BaseResp<ChatStatusData> getChatStatus() {
+		ChatStatusData data = new ChatStatusData();
+
+		String userId = getCurrentUserId();
+		int matchedNum = 0;// 已匹配次数
+		Object matchObj = redisTemplate.opsForHash().get(Const.CHAT_MATCH_HASH_KEY, userId);
+		if (matchObj != null) {
+			matchedNum = StringUtils.parseInt(matchObj.toString());
+		}
+		ChatConfig chatConfig = chatConfigService.getChatConfig();
+		if (chatConfig.getMatchNum() == -1) {
+			data.matchNum = -1;
+		} else {
+			data.matchNum = chatConfig.getMatchNum() - matchedNum;
+		}
+		data.isOpen = isOpen(chatConfig);
+		if (!data.isOpen) {
+			long time = DateUtils.betweenTaskHourMillis(chatConfig.getBeginHour(), 0);
+			data.countdown = time / 1000;
+		}
+		return BaseResp.success(data);
+	}
+
 	@ApiOperation(value = "聊天匹配")
 	@RequestMapping(value = "chatMatch", method = RequestMethod.POST)
 	public BaseResp<UserInfoData> chatMatch(@RequestBody ChatMatchReq req) {
 		BaseResp<UserInfoData> resp = new BaseResp<>();
 		String userId = getCurrentUserId();
 		int matchedNum = 0;// 已匹配次数
-		Object matchObj = redisTemplate.opsForHash().get(Const.CHAT_MATHC_HASH_KEY, userId);
+		Object matchObj = redisTemplate.opsForHash().get(Const.CHAT_MATCH_HASH_KEY, userId);
 		if (matchObj != null) {
 			matchedNum = StringUtils.parseInt(matchObj.toString());
 		}
 		ChatConfig chatConfig = chatConfigService.getChatConfig();
+		if (chatConfig.getMatchNum() != -1 && matchedNum >= chatConfig.getMatchNum()) {
+			resp.code = StatusCode.FAIL.value;
+			resp.msg = "当日匹配次数达到上限";
+			return resp;
+		}
+		if (!isOpen(chatConfig)) {
+			resp.code = StatusCode.FAIL.value;
+			resp.msg = "未到聊天匹配时间";
+			return resp;
+		}
 		User user = userService.getById(userId);
 
 		ChatInfoBean chatInfoBean = null;
@@ -541,10 +578,35 @@ public class UserController {
 			return resp;
 		}
 		resp.data = matchUserInfo;
-		redisTemplate.opsForHash().put(Const.CHAT_MATHC_HASH_KEY, userId, 1);
+		redisTemplate.opsForHash().put(Const.CHAT_MATCH_HASH_KEY, userId, String.valueOf(++matchedNum));
 		// 保存匹配记录
 		matchLogService.add(new ChatMatchLog(StringUtils.randomUUID(), new Date(), userId, matchUserInfo.id));
 		return resp;
+	}
+
+	/**
+	 * 当前时间是否可匹配
+	 * 
+	 * @param chatConfig
+	 * @return
+	 */
+	private static boolean isOpen(ChatConfig chatConfig) {
+		if (chatConfig.getBeginHour() == chatConfig.getEndHour()) {
+			return true;
+		}
+		Calendar now = Calendar.getInstance();
+		int hour = now.get(Calendar.HOUR_OF_DAY);
+		// 跨天
+		if (chatConfig.getBeginHour() > chatConfig.getEndHour()) {
+			if (hour >= chatConfig.getBeginHour() || hour < chatConfig.getEndHour()) {
+				return true;
+			}
+		} else {
+			if (hour >= chatConfig.getBeginHour() && hour < chatConfig.getEndHour()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@ApiOperation(value = "申请添加好友")

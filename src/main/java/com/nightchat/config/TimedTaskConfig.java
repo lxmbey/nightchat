@@ -44,7 +44,7 @@ public class TimedTaskConfig {
 
 		ThreadPool.scheduleWithFixedDelay(() -> {
 			// 凌晨重置匹配次数
-			redisTemplate.delete(Const.CHAT_MATHC_HASH_KEY);
+			redisTemplate.delete(Const.CHAT_MATCH_HASH_KEY);
 		}, DateUtils.betweenTaskHourMillis(0, 0), TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS);
 	}
 }
