@@ -206,6 +206,12 @@ public class UserController {
 		String userId = getCurrentUserId();
 		User user = userService.getById(userId);
 		UserInfoData data = UserInfoData.fromUser(user);
+		String sessionKey = getHeadParam(Const.SESSION_KEY);
+		long time = redisTemplate.getExpire(Const.REDIS_SESSION_KEY + sessionKey);
+		if (time < TimeUnit.DAYS.toSeconds(tokenDay / 2)) {
+			redisTemplate.opsForValue().set(Const.REDIS_USER_KEY + userId, sessionKey, tokenDay, TimeUnit.DAYS);
+			redisTemplate.opsForValue().set(Const.REDIS_SESSION_KEY + sessionKey, user.getId(), tokenDay, TimeUnit.DAYS);
+		}
 		return BaseResp.success(data);
 	}
 
