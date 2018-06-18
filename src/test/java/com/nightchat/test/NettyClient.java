@@ -43,12 +43,13 @@ public class NettyClient {
 
 					@Override
 					public void channelActive(ChannelHandlerContext ctx) throws Exception {
-						Packet packet = new Packet();
-						packet.name = "chat/heart";
-						packet.data = "";
 
 						new Thread() {
 							public void run() {
+								Packet packet = new Packet();
+								packet.name = "chat/heart";
+								packet.data = "";
+								
 								while (true) {
 									ctx.writeAndFlush(packet);
 									try {
@@ -59,6 +60,11 @@ public class NettyClient {
 								}
 							}
 						}.start();
+						
+						Packet packet = new Packet();
+						packet.name = "chat/chatLogin";
+						packet.data = "{'session_key':'e007e2d16f0648a5b42da769a08ca758'}";
+						ctx.writeAndFlush(packet);
 					}
 
 				});
