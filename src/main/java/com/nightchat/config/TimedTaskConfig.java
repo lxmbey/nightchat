@@ -40,11 +40,11 @@ public class TimedTaskConfig {
 			} catch (Exception e) {
 				LogUtil.logger.error("", e);
 			}
-		}, DateUtils.betweenTaskHourMillis(5, 0), TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS);
+		}, DateUtils.betweenTaskHourMillis(5, 0), TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS);
 
 		ThreadPool.scheduleWithFixedDelay(() -> {
 			// 凌晨重置匹配次数
 			redisTemplate.delete(Const.CHAT_MATCH_HASH_KEY);
-		}, DateUtils.betweenTaskHourMillis(0, 0), TimeUnit.DAYS.toMillis(1), TimeUnit.DAYS);
+		}, DateUtils.betweenTaskHourMillis(0, 0), TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS);
 	}
 }
