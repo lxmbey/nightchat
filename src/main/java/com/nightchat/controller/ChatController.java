@@ -79,6 +79,11 @@ public class ChatController {
 			String userId = redisTemplate.opsForValue().get(Const.REDIS_SESSION_KEY + sessionKey);
 			if (userId != null) {
 				User user = userService.getById(userId);
+				// 移除上次登录信息
+				Channel old = Const.onlineUser.get(userId);
+				if (old != null) {
+					Const.onlineChannel.remove(old);
+				}
 				Const.onlineChannel.put(request.channel, UserInfoData.fromUser(user));
 				Const.onlineUser.put(userId, request.channel);
 				return JSON.toJSONString(BaseResp.SUCCESS);
