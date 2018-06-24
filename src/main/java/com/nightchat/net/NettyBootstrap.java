@@ -62,7 +62,11 @@ public class NettyBootstrap {
 						Request request = new Request();
 						request.packet = (Packet) msg;
 						request.channel = ctx.channel();
-						LogUtil.logger.info("Socket收到：" + JSON.toJSONString(request.packet));
+
+						if (!request.packet.name.equals("chat/heart")) {
+							LogUtil.logger.info("Socket收到：" + JSON.toJSONString(request.packet));
+						}
+
 						MethodWrapper method = Functions.getMethod(request.packet.name);
 						if (method == null) {
 							log.warn("不存在的协议" + request.packet.name);

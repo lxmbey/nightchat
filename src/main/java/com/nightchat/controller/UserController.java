@@ -342,11 +342,13 @@ public class UserController {
 		if (StringUtils.isNotEmpty(nickname)) {
 			user.setNickname(nickname);
 		}
-		if (StringUtils.isNotEmpty(headImg) && !headImg.equals(user.getHeadImgUrl())) {
-			// 删除老的
-			OSSClient ossClient = new OSSClient(aliyunConfig.getUrl(), aliyunConfig.getAccessKeyID(), aliyunConfig.getAccessKeySecret());
-			ossClient.deleteObject(aliyunConfig.getBucket(), user.getHeadImgUrl());
-			ossClient.shutdown();
+		if (StringUtils.isNotEmpty(headImg)) {
+			if (StringUtils.isNotEmpty(user.getHeadImgUrl()) && !headImg.equals(user.getHeadImgUrl())) {
+				// 删除老的
+				OSSClient ossClient = new OSSClient(aliyunConfig.getUrl(), aliyunConfig.getAccessKeyID(), aliyunConfig.getAccessKeySecret());
+				ossClient.deleteObject(aliyunConfig.getBucket(), user.getHeadImgUrl());
+				ossClient.shutdown();
+			}
 			user.setHeadImgUrl(headImg);
 		}
 		userService.update(user);
